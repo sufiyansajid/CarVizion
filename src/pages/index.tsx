@@ -55,11 +55,13 @@ const index = () => {
           </h1>
         </div>
         <div className="flex items-center gap-4">
+          <Link to="/profile">
+            <Button variant="ghost" className="text-foreground">
+              Profile
+            </Button>
+          </Link>
           <Link to="/login">
-            <Button
-              variant="ghost"
-              className="text-foreground hover:text-automotive-orange"
-            >
+            <Button variant="ghost" className="text-foreground">
               Sign In
             </Button>
           </Link>
