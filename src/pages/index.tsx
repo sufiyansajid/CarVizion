@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+// import Car3D from "@/components/Car3D";
 
 const index = () => {
   const features = [
@@ -75,36 +76,89 @@ const index = () => {
 
       {/* Hero Section */}
       <div className="relative z-10 container mx-auto px-6 py-20">
-        <div className="text-center max-w-4xl mx-auto animate-slideIn">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            Transform Your{" "}
-            <span className="bg-car-gradient bg-clip-text text-transparent">
-              Dream Car
-            </span>{" "}
-            with AR
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
-            Experience the future of automotive customization with our
-            cutting-edge AR technology. Visualize, customize, and perfect your
-            ride before making any changes.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Side - Content */}
+          <div className="space-y-8 animate-slideIn">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+              Transform Your{" "}
+              <span className="bg-car-gradient bg-clip-text text-transparent">
+                Dream Car
+              </span>{" "}
+              with AR
+            </h1>
+            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">
+              Experience the future of automotive customization with our
+              cutting-edge AR technology. Visualize, customize, and perfect your
+              ride before making any changes.
+            </p>
+
+            {/* Key Features */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Eye className="w-6 h-6 text-automotive-orange" />
+                <span className="text-lg">Real-time AR visualization</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Palette className="w-6 h-6 text-automotive-orange" />
+                <span className="text-lg">AI-powered design suggestions</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Settings className="w-6 h-6 text-automotive-orange" />
+                <span className="text-lg">Precision 3D customization</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link to="/register">
+                <Button
+                  size="lg"
+                  className="bg-car-gradient hover:opacity-90 text-white font-semibold px-8 py-4 text-lg group"
+                >
+                  Start Customizing
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
               <Button
                 size="lg"
-                className="bg-car-gradient hover:opacity-90 text-white font-semibold px-8 py-4 text-lg group"
+                variant="outline"
+                className="border-automotive-orange text-automotive-orange hover:bg-automotive-orange hover:text-white px-8 py-4 text-lg"
               >
-                Start Customizing
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Watch Demo
               </Button>
-            </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-automotive-orange text-automotive-orange hover:bg-automotive-orange hover:text-white px-8 py-4 text-lg"
-            >
-              Watch Demo
-            </Button>
+            </div>
+          </div>
+
+          {/* Right Side - 3D Car */}
+          <div
+            className="relative animate-slideIn"
+            style={{ animationDelay: "300ms" }}
+          >
+            <div className="relative h-[500px] lg:h-[600px] backdrop-blur-lg bg-card/20 rounded-2xl border border-border/20 shadow-2xl overflow-hidden">
+              {/* <Car3D /> */}
+              <iframe
+                src="https://my.spline.design/futuristic3dcar-fuDax5Y9tu7TxWV2700rqMJH/"
+                style={{ width: "100%", height: "100%", border: "none" }}
+              ></iframe>
+
+              {/* Floating stats */}
+              <div className="absolute top-6 left-6 backdrop-blur-lg bg-card/50 rounded-lg p-4 border border-border/20">
+                <div className="text-sm text-muted-foreground">
+                  Active Users
+                </div>
+                <div className="text-2xl font-bold text-automotive-orange">
+                  12,847
+                </div>
+              </div>
+
+              <div className="absolute bottom-6 right-6 backdrop-blur-lg bg-card/50 rounded-lg p-4 border border-border/20">
+                <div className="text-sm text-muted-foreground">
+                  Designs Created
+                </div>
+                <div className="text-2xl font-bold text-automotive-orange">
+                  50K+
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
