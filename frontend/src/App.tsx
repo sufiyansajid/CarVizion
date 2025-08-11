@@ -1,7 +1,6 @@
 import { Toaster as Sonner, Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import CarBackground3D from "@/components/CarBackground3D";
 import Index from "./pages/index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,7 +12,6 @@ const App = () => (
   <TooltipProvider>
     <Toaster />
     <Sonner />
-    {/* <CarBackground3D /> */}
     <div className="relative z-10">
       <BrowserRouter>
         <Routes>
