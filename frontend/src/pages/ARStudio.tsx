@@ -30,6 +30,8 @@ const ARStudio = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setUploadedImage(e.target?.result as string);
+        // In a real app, you would also upload to Supabase Storage
+        console.log("Image uploaded:", file.name);
       };
       reader.readAsDataURL(file);
     }

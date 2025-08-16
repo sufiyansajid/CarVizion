@@ -23,8 +23,41 @@ import {
   Shield,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useRef } from "react";
+import EditProfileDialog from "@/components/dialogs/EditProfileDialog";
+import ChangePasswordDialog from "@/components/dialogs/ChangePasswordDialog";
+import EditCarDesignDialog from "@/components/dialogs/EditCarDesignDialog";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Profile = () => {
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [editDesignOpen, setEditDesignOpen] = useState(false);
+  const [selectedDesign, setSelectedDesign] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // In a real app, this would upload to Supabase Storage
+      toast.success("Image uploaded successfully!");
+      console.log("Uploading file:", file.name);
+    }
+  };
+
+  const handleLogout = () => {
+    // In a real app, this would clear session and redirect
+    toast.success("Logged out successfully!");
+    navigate("/login");
+  };
+
+  const handleEditDesign = (design: any) => {
+    setSelectedDesign(design);
+    setEditDesignOpen(true);
+  };
+
   // Mock data for saved designs - in real app, this would come from Supabase
   const savedDesigns = [
     {
@@ -126,6 +159,7 @@ const Profile = () => {
               <Button
                 variant="outline"
                 className="h-20 flex flex-col gap-2 border-automotive-orange text-automotive-orange hover:bg-automotive-orange hover:text-white"
+                onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="h-6 w-6" />
                 Upload Car Image
@@ -182,6 +216,7 @@ const Profile = () => {
                             size="sm"
                             variant="outline"
                             className="flex-1 border-automotive-orange text-automotive-orange hover:bg-automotive-orange hover:text-white"
+                            onClick={() => handleEditDesign(design)}
                           >
                             Edit
                           </Button>
@@ -229,12 +264,20 @@ const Profile = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => setEditProfileOpen(true)}
+                  >
                     <User className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Button>
 
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => setChangePasswordOpen(true)}
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     Change Password
                   </Button>
@@ -275,6 +318,7 @@ const Profile = () => {
                   <Button
                     variant="destructive"
                     className="w-full justify-start"
+                    onClick={handleLogout}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
@@ -290,6 +334,30 @@ const Profile = () => {
         <Shield className="absolute bottom-40 left-20 w-7 h-7 text-automotive-orange opacity-30 animate-float delay-1000" />
         <Car className="absolute top-1/2 left-10 w-8 h-8 text-automotive-orange-light opacity-20 animate-float" />
       </div>
+
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+
+      {/* Dialogs */}
+      <EditProfileDialog
+        open={editProfileOpen}
+        onOpenChange={setEditProfileOpen}
+      />
+      <ChangePasswordDialog
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+      />
+      <EditCarDesignDialog
+        open={editDesignOpen}
+        onOpenChange={setEditDesignOpen}
+        design={selectedDesign}
+      />
     </div>
   );
 };

@@ -44,6 +44,20 @@
   }
 }
 
+/* Custom automotive gradients and utilities */
+.automotive-orange {
+  color: hsl(14, 100%, 55%);
+}
+
+.automotive-orange-light {
+  color: hsl(26, 100%, 55%);
+}
+
+/* Ensure all icons have transparent backgrounds */
+.lucide {
+  background: transparent !important;
+}
+
 /* Custom animations for CarVizion */
 @keyframes float {
   0%,
