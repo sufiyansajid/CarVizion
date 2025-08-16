@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 
 const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -325,9 +326,12 @@ const RegisterForm = () => {
               <span className="text-muted-foreground">
                 Already have an account?{" "}
               </span>
-              <button className="text-automotive-orange hover:text-automotive-orange-light font-medium transition-colors">
+              <Link
+                to="/login"
+                className="text-automotive-orange hover:text-automotive-orange-light font-medium transition-colors"
+              >
                 Sign in
-              </button>
+              </Link>
             </div>
           </CardContent>
         </Card>
