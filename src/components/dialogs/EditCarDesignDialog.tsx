@@ -1,181 +1,148 @@
-import { useState } from "react";
+"use client";
+
+import { useForm } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { editCarDesignSchema } from "@/lib/schemas";
+
+import type {
+  EditCarDesignFormInput,
+  EditCarDesignFormData,
+} from "@/lib/schemas";
+
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon, Save, X } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
-interface EditCarDesignDialogProps {
+type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  design?: {
-    id: number;
-    name: string;
-    thumbnail: string;
-    date: string;
-  };
-}
+  design?: EditCarDesignFormData; // parsed design from backend
+  onSave: (data: EditCarDesignFormData) => void;
+};
 
-const EditCarDesignDialog = ({
+export function EditCarDesignDialog({
   open,
   onOpenChange,
   design,
-}: EditCarDesignDialogProps) => {
-  const [name, setName] = useState(design?.name || "");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [date, setDate] = useState<Date | undefined>(
-    design ? new Date(design.date) : undefined
-  );
+  onSave,
+}: Props) {
+  const form = useForm<EditCarDesignFormInput>({
+    resolver: zodResolver(editCarDesignSchema),
+    defaultValues: {
+      name: design?.name || "",
+      description: design?.description || "",
+      category: design?.category || "",
+      date: design?.date ? design.date.toISOString().slice(0, 10) : "",
+    },
+  });
 
-  const handleSave = () => {
-    // In a real app, this would save to Supabase
-    console.log("Saving design:", { name, description, category, date });
-    onOpenChange(false);
+  const onSubmit: SubmitHandler<EditCarDesignFormInput> = (rawData) => {
+    const parsed = editCarDesignSchema.parse(rawData); // -> EditCarDesignFormData
+    onSave(parsed);
+    onOpenChange(false); // close after save
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="backdrop-blur-lg bg-card/90 border-border shadow-2xl max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-car-gradient flex items-center justify-center">
-              <Save className="h-4 w-4 text-white" />
-            </div>
-            Edit Car Design
-          </DialogTitle>
+          <DialogTitle>Edit Car Design</DialogTitle>
           <DialogDescription>
-            Update your car design details and preferences
+            Update the details of your car design below.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Design Name */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="name"
-              className="text-sm font-medium text-foreground"
-            >
-              Design Name
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter design name"
-              className="backdrop-blur-sm bg-card/50 border-border"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Design Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter design name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="description"
-              className="text-sm font-medium text-foreground"
-            >
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your car design"
-              className="backdrop-blur-sm bg-card/50 border-border min-h-[80px]"
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {/* Category */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">
-              Category
-            </Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="backdrop-blur-sm bg-card/50 border-border">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-card/90 border-border">
-                <SelectItem value="sports">Sports Car</SelectItem>
-                <SelectItem value="sedan">Sedan</SelectItem>
-                <SelectItem value="suv">SUV</SelectItem>
-                <SelectItem value="coupe">Coupe</SelectItem>
-                <SelectItem value="hatchback">Hatchback</SelectItem>
-                <SelectItem value="convertible">Convertible</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter category" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* Date Created */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">
-              Date Created
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal backdrop-blur-sm bg-card/50 border-border",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-card/90 border-border">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value as string} // 👈 cast unknown → string
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="flex gap-3 pt-4">
-          <Button
-            onClick={handleSave}
-            className="flex-1 bg-car-gradient hover:opacity-90 text-white"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-        </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Save</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default EditCarDesignDialog;
+}

@@ -6,51 +6,122 @@
 
 @layer base {
   :root {
-    --background: 0 0% 3%;
-    --foreground: 210 40% 98%;
+    /* Dark mode - Purple/gray tones with orange and cyan accents */
+    --background: 250 15% 10%; /* Dark purple/gray */
+    --foreground: 0 0% 95%; /* Light text */
 
-    --card: 0 0% 6%;
-    --card-foreground: 210 40% 98%;
+    --card: 250 12% 15%; /* Slightly lighter purple/gray for cards */
+    --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 250 12% 15%; /* Same as card */
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 14 100% 60%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 14 100% 60%; /* Vibrant orange */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 12%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 250 10% 20%; /* Medium purple/gray */
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 210 40% 12%;
-    --muted-foreground: 215.4 16.3% 56.9%;
+    --muted: 250 8% 25%; /* Muted purple/gray */
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 14 100% 60%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 180 100% 50%; /* Cyan accent */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 14 100% 60%;
+    --border: 250 10% 20%; /* Border color */
+    --input: 250 10% 20%; /* Input border color */
+    --ring: 14 100% 60%; /* Orange ring for focus */
+
+    --radius: 0.75rem;
+  }
+
+  .light {
+    /* Light mode - Light lavender/gray background with orange and cyan accents */
+    --background: 250 20% 95%; /* Light lavender/gray */
+    --foreground: 250 15% 15%; /* Dark text */
+
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 250 15% 15%;
+
+    --popover: 0 0% 100%; /* White popover */
+    --popover-foreground: 250 15% 15%;
+
+    --primary: 25 100% 50%; /* Deep orange */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 250 15% 85%; /* Light purple/gray */
+    --secondary-foreground: 250 15% 25%;
+
+    --muted: 250 12% 80%; /* Muted light purple/gray */
+    --muted-foreground: 250 10% 40%;
+
+    --accent: 180 100% 35%; /* Deep cyan */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 250 15% 80%; /* Light border color */
+    --input: 250 15% 80%; /* Light input border color */
+    --ring: 25 100% 50%; /* Deep orange ring for focus */
 
     --radius: 0.75rem;
   }
 
   body {
     @apply bg-background text-foreground font-sans;
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(250 15% 5%) 0%,
+      hsl(250 15% 10%) 100%
+    );
     min-height: 100vh;
+  }
+
+  .light body {
+    background: linear-gradient(
+      135deg,
+      hsl(250 20% 90%) 0%,
+      hsl(250 20% 95%) 100%
+    );
+  }
+  /* Background gradients for dark and light themes */
+  .bg-dark-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(250 15% 5%) 0%,
+      hsl(250 15% 10%) 100%
+    );
+  }
+
+  .light .bg-dark-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(250 20% 90%) 0%,
+      hsl(250 20% 95%) 100%
+    );
   }
 }
 
 /* Custom automotive gradients and utilities */
 .automotive-orange {
-  color: hsl(14, 100%, 55%);
+  color: hsl(25, 100%, 50%); /* Deep orange */
 }
 
 .automotive-orange-light {
-  color: hsl(26, 100%, 55%);
+  color: hsl(30, 100%, 60%); /* Lighter orange */
+}
+
+/* Cyan accent color */
+.automotive-cyan {
+  color: hsl(180, 100%, 35%); /* Deep cyan */
+}
+
+.automotive-cyan-light {
+  color: hsl(180, 100%, 50%); /* Lighter cyan */
 }
 
 /* Ensure all icons have transparent backgrounds */
@@ -103,12 +174,23 @@
 }
 
 .gradient-border {
-  background: linear-gradient(135deg, #ff5e1a, #ff8c1a);
+  background: linear-gradient(135deg, hsl(25, 100%, 50%), hsl(30, 100%, 60%));
   padding: 2px;
   border-radius: 0.75rem;
 }
 
 .gradient-border > * {
+  background: hsl(var(--background));
+  border-radius: calc(0.75rem - 2px);
+}
+
+.gradient-border-cyan {
+  background: linear-gradient(135deg, hsl(180, 100%, 35%), hsl(180, 100%, 50%));
+  padding: 2px;
+  border-radius: 0.75rem;
+}
+
+.gradient-border-cyan > * {
   background: hsl(var(--background));
   border-radius: calc(0.75rem - 2px);
 }

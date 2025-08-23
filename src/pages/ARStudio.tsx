@@ -61,7 +61,7 @@ const ARStudio = () => {
         <Card className="bg-card/80 backdrop-blur-sm border-primary/20">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-automotive-orange to-automotive-orange-light bg-clip-text text-transparent">
                 AR Customization Studio
               </CardTitle>
               <div className="flex gap-2">
@@ -73,7 +73,7 @@ const ARStudio = () => {
                   <Redo2 className="w-4 h-4 mr-2" />
                   Redo
                 </Button>
-                <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                <Button className="bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90">
                   <Save className="w-4 h-4 mr-2" />
                   Save Design
                 </Button>
