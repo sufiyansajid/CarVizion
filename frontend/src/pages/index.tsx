@@ -16,9 +16,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-// import Car3D from "@/components/Car3D";
+import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 
-const index = () => {
+const Index = () => {
   const features = [
     {
       icon: <Eye className="w-8 h-8 text-automotive-orange" />,
@@ -41,33 +41,42 @@ const index = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative ">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-dark-gradient" />
       <div className="absolute top-20 left-20 w-96 h-96 bg-automotive-orange opacity-10 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-20 right-20 w-96 h-96 bg-automotive-orange-light opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       {/* Navigation */}
-      <nav className="relative z-10 flex items-center justify-between p-6">
+      <nav className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/20 flex items-center justify-between p-6">
         <div className="flex items-center gap-2">
           <Car className="w-8 h-8 text-automotive-orange animate-glow" />
-          <h1 className="text-2xl font-bold bg-car-gradient bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-automotive-orange to-automotive-orange-light bg-clip-text text-transparent">
             CarVizion
           </h1>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggleButton
+            variant="gif"
+            url="https://media.giphy.com/media/KBbr4hHl9DSahKvInO/giphy.gif?cid=790b76112m5eeeydoe7et0cr3j3ekb1erunxozyshuhxx2vl&ep=v1_stickers_search&rid=giphy.gif&ct=s"
+          />
           <Link to="/profile">
-            <Button variant="ghost" className="text-foreground">
+            <Button variant="ghost" className="text-foreground ">
               Profile
             </Button>
           </Link>
+          <Link to="/pricing">
+            <Button variant="ghost" className="text-foreground ">
+              Pricing
+            </Button>
+          </Link>
           <Link to="/login">
-            <Button variant="ghost" className="text-foreground">
+            <Button variant="ghost" className="text-foreground ">
               Sign In
             </Button>
           </Link>
           <Link to="/register">
-            <Button className="bg-car-gradient hover:opacity-90 text-white">
+            <Button className="bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white">
               Get Started
             </Button>
           </Link>
@@ -81,9 +90,9 @@ const index = () => {
           <div className="space-y-8 animate-slideIn">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
               Transform Your{" "}
-              <span className="bg-car-gradient bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-automotive-orange to-automotive-orange-light bg-clip-text text-transparent">
                 Dream Car
-              </span>{" "}
+              </span>
               with AR
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">
@@ -112,7 +121,7 @@ const index = () => {
               <Link to="/register">
                 <Button
                   size="lg"
-                  className="bg-car-gradient hover:opacity-90 text-white font-semibold px-8 py-4 text-lg group"
+                  className="bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white font-semibold px-8 py-4 text-lg group"
                 >
                   Start Customizing
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -133,12 +142,33 @@ const index = () => {
             className="relative animate-slideIn"
             style={{ animationDelay: "300ms" }}
           >
-            <div className="relative h-[500px] lg:h-[600px] backdrop-blur-lg bg-card/20 rounded-2xl border border-border/20 shadow-2xl overflow-hidden">
-              {/* <Car3D /> */}
+            <div
+              className="relative z-0 h-[500px] lg:h-[600px] backdrop-blur-lg bg-card/20 rounded-2xl border border-border/20 shadow-2xl overflow-hidden"
+              style={{
+                isolation: "isolate",
+                transform: "translateZ(0)",
+                willChange: "transform",
+                perspective: "1px",
+                backfaceVisibility: "hidden",
+                contentVisibility: "auto",
+                display: "block",
+                position: "relative",
+                zIndex: "auto",
+                contain: "layout",
+                visibility: "visible",
+              }}
+            >
               <iframe
                 src="https://my.spline.design/futuristic3dcar-fuDax5Y9tu7TxWV2700rqMJH/"
-                style={{ width: "100%", height: "100%", border: "none" }}
-              ></iframe>
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  border: "none",
+                  zIndex: 0,
+                  pointerEvents: "none",
+                }}
+                title="3D Car Model"
+              />
 
               {/* Floating stats */}
               <div className="absolute top-6 left-6 backdrop-blur-lg bg-card/50 rounded-lg p-4 border border-border/20">
@@ -204,7 +234,7 @@ const index = () => {
                 <Link to="/register">
                   <Button
                     size="lg"
-                    className="bg-car-gradient hover:opacity-90 text-white font-semibold px-8 py-3 w-full sm:w-auto"
+                    className="bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white font-semibold px-8 py-3 w-full sm:w-auto"
                   >
                     Create Free Account
                   </Button>
@@ -235,4 +265,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default Index;

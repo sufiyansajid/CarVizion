@@ -26,7 +26,7 @@ import { Link } from "react-router-dom";
 import { useState, useRef } from "react";
 import EditProfileDialog from "@/components/dialogs/EditProfileDialog";
 import ChangePasswordDialog from "@/components/dialogs/ChangePasswordDialog";
-import EditCarDesignDialog from "@/components/dialogs/EditCarDesignDialog";
+import { EditCarDesignDialog } from "@/components/dialogs/EditCarDesignDialog";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -37,6 +37,13 @@ const Profile = () => {
   const [selectedDesign, setSelectedDesign] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  const handleSaveDesign = (data: any) => {
+    console.log("Saving updated design:", data);
+    // This is where you would call your API to save the changes
+    toast.success("Design updated successfully!");
+    setEditDesignOpen(false); // Close the dialog after saving
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -108,7 +115,7 @@ const Profile = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8 animate-slideIn">
           <div>
-            <h1 className="text-4xl font-bold bg-car-gradient bg-clip-text text-transparent mb-2">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-automotive-orange to-automotive-orange-light bg-clip-text text-transparent mb-2">
               Profile
             </h1>
             <p className="text-muted-foreground">
@@ -148,7 +155,7 @@ const Profile = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 asChild
-                className="h-20 flex flex-col gap-2 bg-car-gradient hover:opacity-90 text-white"
+                className="h-20 flex flex-col gap-2 bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white"
               >
                 <Link to="/ar-studio">
                   <Car className="h-6 w-6" />
@@ -240,7 +247,7 @@ const Profile = () => {
                     </p>
                     <Button
                       asChild
-                      className="bg-car-gradient hover:opacity-90 text-white"
+                      className="bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white"
                     >
                       <Link to="/">Create Your First Design</Link>
                     </Button>
@@ -357,6 +364,7 @@ const Profile = () => {
         open={editDesignOpen}
         onOpenChange={setEditDesignOpen}
         design={selectedDesign}
+        onSave={handleSaveDesign}
       />
     </div>
   );

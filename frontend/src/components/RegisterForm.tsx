@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { Eye, EyeOff, Car, Zap, Shield, ArrowRight, Check } from "lucide-react";
+import { useState } from "react";
+import { Eye, EyeOff, Car, Zap, Shield, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -13,43 +12,45 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema } from "@/lib/schemas";
+import type { RegisterFormData } from "@/lib/schemas";
 
 const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    acceptTerms: false,
-    newsletter: false,
-  });
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
-      return;
-    }
-    if (!formData.acceptTerms) {
-      alert("Please accept the terms and conditions!");
-      return;
-    }
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      acceptTerms: false,
+      newsletter: false,
+    },
+  });
 
+  const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
 
     // Simulate registration process
     setTimeout(() => {
       setIsLoading(false);
-      console.log("Registration attempt:", formData);
+      console.log("Registration attempt:", data);
     }, 2000);
-  };
-
-  const updateFormData = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const passwordStrength = (password: string) => {
@@ -63,7 +64,7 @@ const RegisterForm = () => {
   };
 
   const getStrengthColor = (strength: number) => {
-    if (strength < 2) return "bg-red-500";
+    if (strength < 2) return "bg-destructive";
     if (strength < 4) return "bg-yellow-500";
     return "bg-green-500";
   };
@@ -73,6 +74,8 @@ const RegisterForm = () => {
     if (strength < 4) return "Medium";
     return "Strong";
   };
+
+  const watchedPassword = form.watch("password");
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -90,7 +93,7 @@ const RegisterForm = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Car className="w-10 h-10 text-automotive-orange animate-glow" />
-            <h1 className="text-4xl font-bold bg-car-gradient bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-automotive-orange to-automotive-orange-light bg-clip-text text-transparent">
               CarVizion
             </h1>
           </div>
@@ -109,204 +112,232 @@ const RegisterForm = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    type="text"
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      updateFormData("firstName", e.target.value)
-                    }
-                    className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={(e) => updateFormData("lastName", e.target.value)}
-                    className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john.doe@example.com"
-                  value={formData.email}
-                  onChange={(e) => updateFormData("email", e.target.value)}
-                  className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a strong password"
-                    value={formData.password}
-                    onChange={(e) => updateFormData("password", e.target.value)}
-                    className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {formData.password && (
-                  <div className="space-y-1">
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((level) => (
-                        <div
-                          key={level}
-                          className={`h-1 rounded-full flex-1 ${
-                            level <= passwordStrength(formData.password)
-                              ? getStrengthColor(
-                                  passwordStrength(formData.password)
-                                )
-                              : "bg-muted"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Strength:{" "}
-                      {getStrengthText(passwordStrength(formData.password))}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={(e) =>
-                      updateFormData("confirmPassword", e.target.value)
-                    }
-                    className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {formData.confirmPassword &&
-                  formData.password !== formData.confirmPassword && (
-                    <p className="text-xs text-red-500">
-                      Passwords do not match
-                    </p>
-                  )}
-                {formData.confirmPassword &&
-                  formData.password === formData.confirmPassword &&
-                  formData.password && (
-                    <p className="text-xs text-green-500 flex items-center gap-1">
-                      <Check className="w-3 h-3" />
-                      Passwords match
-                    </p>
-                  )}
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="terms"
-                    checked={formData.acceptTerms}
-                    onCheckedChange={(checked) =>
-                      updateFormData("acceptTerms", checked as boolean)
-                    }
-                  />
-                  <Label
-                    htmlFor="terms"
-                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    I agree to the{" "}
-                    <button
-                      type="button"
-                      className="text-automotive-orange hover:text-automotive-orange-light"
-                    >
-                      Terms of Service
-                    </button>{" "}
-                    and{" "}
-                    <button
-                      type="button"
-                      className="text-automotive-orange hover:text-automotive-orange-light"
-                    >
-                      Privacy Policy
-                    </button>
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="newsletter"
-                    checked={formData.newsletter}
-                    onCheckedChange={(checked) =>
-                      updateFormData("newsletter", checked as boolean)
-                    }
-                  />
-                  <Label
-                    htmlFor="newsletter"
-                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Subscribe to newsletter for updates and tips
-                  </Label>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-car-gradient hover:opacity-90 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 group"
-                disabled={isLoading || !formData.acceptTerms}
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
               >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Creating Account...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    Create Account
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                )}
-              </Button>
-            </form>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="John"
+                            className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="Doe"
+                            className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="john.doe@example.com"
+                          className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Create a strong password"
+                            className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </FormControl>
+                      {watchedPassword && (
+                        <div className="space-y-1">
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((level) => (
+                              <div
+                                key={level}
+                                className={`h-1 rounded-full flex-1 ${
+                                  level <= passwordStrength(watchedPassword)
+                                    ? getStrengthColor(
+                                        passwordStrength(watchedPassword)
+                                      )
+                                    : "bg-muted"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Strength:{" "}
+                            {getStrengthText(passwordStrength(watchedPassword))}
+                          </p>
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirm your password"
+                            className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name="acceptTerms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            I agree to the{" "}
+                            <button
+                              type="button"
+                              className="text-automotive-orange hover:text-automotive-orange-light"
+                            >
+                              Terms of Service
+                            </button>{" "}
+                            and{" "}
+                            <button
+                              type="button"
+                              className="text-automotive-orange hover:text-automotive-orange-light"
+                            >
+                              Privacy Policy
+                            </button>
+                          </FormLabel>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="newsletter"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Subscribe to newsletter for updates and tips
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 group"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Creating Account...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      Create Account
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  )}
+                </Button>
+              </form>
+            </Form>
 
             <div className="relative">
               <Separator className="my-4" />
