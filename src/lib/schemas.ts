@@ -51,19 +51,18 @@ export const changePasswordSchema = z
   });
 
 export const editCarDesignSchema = z.object({
-  name: z
+  name: z.string().min(1, "Name is required"),
+  description: z.string(),
+  category: z.string(),
+  date: z
     .string()
-    .min(1, { message: "Design name is required" })
-    .max(50, { message: "Name must be less than 50 characters" }),
-  description: z
-    .string()
-    .max(200, { message: "Description must be less than 200 characters" })
-    .optional()
-    .or(z.literal("")),
-  category: z.string().min(1, { message: "Please select a category" }),
-  date: z.coerce.date().refine((val) => !!val, {
-    message: "Please select a date",
-  }),
+    .or(z.date())
+    .transform((val) => {
+      if (typeof val === "string") {
+        return new Date(val);
+      }
+      return val;
+    }),
 });
 
 // ✅ Types for all forms

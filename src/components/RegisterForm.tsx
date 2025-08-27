@@ -80,22 +80,20 @@ const RegisterForm = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-dark-gradient" />
-      <div className="absolute top-20 left-20 w-96 h-96 bg-automotive-orange opacity-10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-automotive-orange-light opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute inset-0 bg-background" />
+      <div className="absolute top-20 left-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       {/* Floating Car Icons */}
-      <Car className="absolute top-10 right-10 w-8 h-8 text-automotive-orange opacity-30 animate-float" />
-      <Zap className="absolute top-32 left-32 w-6 h-6 text-automotive-orange-light opacity-30 animate-float delay-500" />
-      <Shield className="absolute bottom-32 right-20 w-7 h-7 text-automotive-orange opacity-30 animate-float delay-1000" />
+      <Car className="absolute top-10 right-10 w-8 h-8 text-primary opacity-30 animate-float" />
+      <Zap className="absolute top-32 left-32 w-6 h-6 text-primary opacity-30 animate-float delay-500" />
+      <Shield className="absolute bottom-32 right-20 w-7 h-7 text-primary opacity-30 animate-float delay-1000" />
 
       <div className="relative z-10 w-full max-w-md animate-slideIn">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Car className="w-10 h-10 text-automotive-orange animate-glow" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-automotive-orange to-automotive-orange-light bg-clip-text text-transparent">
-              CarVizion
-            </h1>
+            <Car className="w-10 h-10 text-primary" />
+            <h1 className="text-4xl font-bold text-primary">CarVizion</h1>
           </div>
           <p className="text-muted-foreground">
             Join the future of car customization
@@ -128,7 +126,7 @@ const RegisterForm = () => {
                           <Input
                             type="text"
                             placeholder="John"
-                            className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                            className="bg-background/50 border-border focus:ring-primary transition-colors"
                             {...field}
                           />
                         </FormControl>
@@ -146,7 +144,7 @@ const RegisterForm = () => {
                           <Input
                             type="text"
                             placeholder="Doe"
-                            className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                            className="bg-background/50 border-border focus:ring-primary transition-colors"
                             {...field}
                           />
                         </FormControl>
@@ -166,7 +164,7 @@ const RegisterForm = () => {
                         <Input
                           type="email"
                           placeholder="john.doe@example.com"
-                          className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                          className="bg-background/50 border-border focus:ring-primary transition-colors"
                           {...field}
                         />
                       </FormControl>
@@ -186,7 +184,7 @@ const RegisterForm = () => {
                           <Input
                             type={showPassword ? "text" : "password"}
                             placeholder="Create a strong password"
-                            className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
+                            className="bg-background/50 border-border focus:ring-primary transition-colors pr-10"
                             {...field}
                           />
                           <button
@@ -240,7 +238,7 @@ const RegisterForm = () => {
                           <Input
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="Confirm your password"
-                            className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
+                            className="bg-background/50 border-border focus:ring-primary transition-colors pr-10"
                             {...field}
                           />
                           <button
@@ -321,12 +319,12 @@ const RegisterForm = () => {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 group"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold transition-all duration-300 group"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                       Creating Account...
                     </div>
                   ) : (
@@ -346,10 +344,7 @@ const RegisterForm = () => {
               </span>
             </div>
 
-            <Button
-              variant="outline"
-              className="w-full border-border hover:bg-muted/50 transition-colors"
-            >
+            <Button variant="outline" className="w-full">
               Continue with Google
             </Button>
 
@@ -359,7 +354,7 @@ const RegisterForm = () => {
               </span>
               <Link
                 to="/login"
-                className="text-automotive-orange hover:text-automotive-orange-light font-medium transition-colors"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 Sign in
               </Link>

@@ -89,10 +89,10 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] backdrop-blur-xl bg-card/70 border-border shadow-2xl">
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Shield className="h-5 w-5 text-automotive-orange animate-glow" />
+            <Shield className="h-5 w-5 text-primary animate-pulse" />
             Change Password
           </DialogTitle>
           <DialogDescription>
@@ -113,7 +113,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                       <Input
                         type={showPasswords.current ? "text" : "password"}
                         placeholder="Enter your current password"
-                        className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
+                        className="bg-background/50 border-input focus:ring-primary"
                         {...field}
                       />
                       <button
@@ -145,7 +145,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                       <Input
                         type={showPasswords.new ? "text" : "password"}
                         placeholder="Enter your new password"
-                        className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
+                        className="bg-background/50 border-input focus:ring-primary"
                         {...field}
                       />
                       <button
@@ -199,7 +199,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                       <Input
                         type={showPasswords.confirm ? "text" : "password"}
                         placeholder="Confirm your new password"
-                        className="bg-background/50 border-border focus:border-automotive-orange transition-colors pr-10"
+                        className="bg-background/50 border-input focus:ring-primary"
                         {...field}
                       />
                       <button
@@ -225,19 +225,14 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="border-border hover:bg-muted/50"
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-car-gradient hover:opacity-90 text-white"
-              >
+              <Button type="submit" disabled={isLoading} variant="default">
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                     Updating...
                   </div>
                 ) : (

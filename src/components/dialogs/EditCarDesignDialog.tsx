@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editCarDesignSchema } from "@/lib/schemas";
+import { Car } from "lucide-react";
 
 import type {
   EditCarDesignFormInput,
@@ -48,7 +49,10 @@ export function EditCarDesignDialog({
       name: design?.name || "",
       description: design?.description || "",
       category: design?.category || "",
-      date: design?.date ? design.date.toISOString().slice(0, 10) : "",
+      date:
+        design?.date instanceof Date
+          ? design.date.toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
     },
   });
 
@@ -62,7 +66,10 @@ export function EditCarDesignDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit Car Design</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Car className="h-5 w-5 text-primary" />
+            Edit Car Design
+          </DialogTitle>
           <DialogDescription>
             Update the details of your car design below.
           </DialogDescription>
@@ -138,7 +145,9 @@ export function EditCarDesignDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
+              <Button type="submit" variant="default">
+                Save Changes
+              </Button>
             </DialogFooter>
           </form>
         </Form>

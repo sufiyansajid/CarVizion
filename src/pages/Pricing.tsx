@@ -15,7 +15,6 @@ import {
   Zap,
   Shield,
   Crown,
-  Car,
   Camera,
   Palette,
   Download,
@@ -92,15 +91,14 @@ const Pricing = () => {
   return (
     <div className="min-h-screen relative overflow-hidden p-6">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-dark-gradient" />
-      <div className="absolute top-20 left-20 w-96 h-96 bg-automotive-orange opacity-10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-automotive-orange-light opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
-      <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-automotive-orange opacity-5 rounded-full blur-3xl animate-pulse delay-500" />
+      <div className="absolute inset-0 bg-background" />
+      <div className="absolute top-20 left-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-16 animate-slideIn">
-          <h1 className="text-5xl font-bold bg-car-gradient bg-clip-text text-transparent mb-6">
+          <h1 className="text-5xl font-bold text-primary mb-6">
             Choose Your Plan
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
@@ -132,7 +130,7 @@ const Pricing = () => {
             <Card
               key={plan.name}
               className={`relative backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slideIn ${
-                plan.popular ? "ring-2 ring-automotive-orange" : ""
+                plan.popular ? "ring-2 ring-primary" : ""
               }`}
               style={{ animationDelay: `${index * 200}ms` }}
             >
@@ -207,10 +205,7 @@ const Pricing = () => {
         </div>
 
         {/* Feature Highlights */}
-        <Card
-          className="backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 mb-16 animate-slideIn"
-          style={{ animationDelay: "600ms" }}
-        >
+        <Card className="backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 mb-16 animate-slideIn">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
               <Zap className="h-6 w-6 text-automotive-orange animate-glow" />
@@ -270,68 +265,6 @@ const Pricing = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* FAQ Section */}
-        <Card
-          className="backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 animate-slideIn"
-          style={{ animationDelay: "800ms" }}
-        >
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              Frequently Asked Questions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">
-                  Can I cancel anytime?
-                </h4>
-                <p className="text-muted-foreground">
-                  Yes, you can cancel your subscription at any time. Your
-                  premium features will remain active until the end of your
-                  billing period.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">
-                  Is there a free trial?
-                </h4>
-                <p className="text-muted-foreground">
-                  Yes! We offer a 14-day free trial for the Pro plan. No credit
-                  card required to start.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">
-                  What payment methods do you accept?
-                </h4>
-                <p className="text-muted-foreground">
-                  We accept all major credit cards, PayPal, and bank transfers
-                  for Enterprise plans.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">
-                  Can I upgrade or downgrade?
-                </h4>
-                <p className="text-muted-foreground">
-                  Absolutely! You can change your plan at any time from your
-                  account settings.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Floating Elements */}
-        <Zap className="absolute top-32 right-20 w-6 h-6 text-automotive-orange opacity-30 animate-float delay-500" />
-        <Shield className="absolute bottom-40 left-20 w-7 h-7 text-automotive-orange opacity-30 animate-float delay-1000" />
-        <Car className="absolute top-1/2 left-10 w-8 h-8 text-automotive-orange-light opacity-20 animate-float" />
-        <Crown className="absolute top-1/4 right-1/4 w-6 h-6 text-automotive-orange opacity-25 animate-float delay-700" />
       </div>
     </div>
   );

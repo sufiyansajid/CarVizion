@@ -55,17 +55,17 @@ const ARStudio = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background p-4 animate-slideIn">
+    <div className="min-h-screen bg-background p-4 animate-slideIn">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-6">
-        <Card className="bg-card/80 backdrop-blur-sm border-primary/20">
+        <Card className="bg-card/80 backdrop-blur-sm border-border">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-automotive-orange to-automotive-orange-light bg-clip-text text-transparent">
+              <CardTitle className="text-2xl font-bold text-primary">
                 AR Customization Studio
               </CardTitle>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="animate-glow">
+                <Button variant="outline" size="sm">
                   <Undo2 className="w-4 h-4 mr-2" />
                   Undo
                 </Button>
@@ -83,6 +83,7 @@ const ARStudio = () => {
         </Card>
       </div>
 
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Canvas Area */}
         <div className="lg:col-span-3">

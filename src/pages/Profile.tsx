@@ -108,16 +108,16 @@ const Profile = () => {
   return (
     <div className="min-h-screen relative overflow-hidden p-6">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-dark-gradient" />
-      <div className="absolute top-20 left-20 w-96 h-96 bg-automotive-orange opacity-10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-automotive-orange-light opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute inset-0 bg-background" />
+      <div className="absolute top-20 left-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
+
+      {/* Content */}
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 animate-slideIn">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-automotive-orange to-automotive-orange-light bg-clip-text text-transparent mb-2">
-              Profile
-            </h1>
+            <h1 className="text-4xl font-bold text-primary mb-2">Profile</h1>
             <p className="text-muted-foreground">
               Manage your car customizations and account settings
             </p>
@@ -137,14 +137,11 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <Card
-          className="mb-8 backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 animate-slideIn"
-          style={{ animationDelay: "200ms" }}
-        >
+        {/* Quick Actions Card */}
+        <Card className="mb-8 backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 animate-slideIn">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-automotive-orange animate-glow" />
+              <Plus className="h-5 w-5 text-primary animate-glow" />
               Quick Actions
             </CardTitle>
             <CardDescription>
@@ -155,7 +152,7 @@ const Profile = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 asChild
-                className="h-20 flex flex-col gap-2 bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white"
+                className="h-20 flex flex-col gap-2 bg-primary hover:bg-primary/90"
               >
                 <Link to="/ar-studio">
                   <Car className="h-6 w-6" />
@@ -183,7 +180,7 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        {/* Main Content Grid */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Saved Designs */}
           <div

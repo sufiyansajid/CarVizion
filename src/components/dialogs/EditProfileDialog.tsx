@@ -58,10 +58,10 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] backdrop-blur-xl bg-card/70 border-border shadow-2xl">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <User className="h-5 w-5 text-automotive-orange animate-glow" />
+            <User className="h-5 w-5 text-primary animate-pulse" />
             Edit Profile
           </DialogTitle>
           <DialogDescription>
@@ -73,7 +73,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Profile Picture */}
             <div className="flex flex-col items-center gap-4">
-              <Avatar className="h-20 w-20 border-2 border-automotive-orange">
+              <Avatar className="h-20 w-20 border-2 border-primary">
                 <AvatarImage src="/placeholder.svg" />
                 <AvatarFallback>
                   <User className="h-8 w-8" />
@@ -83,7 +83,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="border-automotive-orange text-automotive-orange hover:bg-automotive-orange hover:text-white"
+                className="border-primary text-primary hover:bg-primary hover:text-white"
               >
                 <Camera className="h-4 w-4 mr-2" />
                 Change Photo
@@ -100,7 +100,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                   <FormControl>
                     <Input
                       type="text"
-                      className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                      className="bg-background/50 border-input focus:ring-primary"
                       {...field}
                     />
                   </FormControl>
@@ -118,7 +118,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                   <FormControl>
                     <Input
                       type="email"
-                      className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                      className="bg-background/50 border-input focus:ring-primary"
                       {...field}
                     />
                   </FormControl>
@@ -136,7 +136,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                   <FormControl>
                     <Input
                       type="tel"
-                      className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                      className="bg-background/50 border-input focus:ring-primary"
                       {...field}
                     />
                   </FormControl>
@@ -155,7 +155,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                     <Input
                       type="text"
                       placeholder="Tell us about yourself..."
-                      className="bg-background/50 border-border focus:border-automotive-orange transition-colors"
+                      className="bg-background/50 border-input focus:ring-primary"
                       {...field}
                     />
                   </FormControl>
@@ -174,14 +174,10 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-car-gradient hover:opacity-90 text-white"
-              >
+              <Button type="submit" disabled={isLoading} variant="default">
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                     Saving...
                   </div>
                 ) : (
