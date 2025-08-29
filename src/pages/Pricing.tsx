@@ -20,6 +20,7 @@ import {
   Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const Pricing = () => {
   const plans = [
@@ -106,17 +107,18 @@ const Pricing = () => {
             features. Start free and upgrade when you're ready for more.
           </p>
 
+          {/* Update badges */}
           <div className="flex items-center justify-center gap-4 mb-8">
             <Badge
               variant="outline"
-              className="px-4 py-2 text-automotive-orange border-automotive-orange"
+              className="px-4 py-2 text-primary border-primary hover:bg-primary/10"
             >
               <Star className="h-4 w-4 mr-2" />
               14-day free trial
             </Badge>
             <Badge
               variant="outline"
-              className="px-4 py-2 text-automotive-orange-light border-automotive-orange-light"
+              className="px-4 py-2 text-primary border-primary hover:bg-primary/10"
             >
               <Shield className="h-4 w-4 mr-2" />
               No credit card required
@@ -125,14 +127,14 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-16">
+          {plans.map((plan) => (
             <Card
               key={plan.name}
-              className={`relative backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slideIn ${
-                plan.popular ? "ring-2 ring-primary" : ""
-              }`}
-              style={{ animationDelay: `${index * 200}ms` }}
+              className={cn(
+                "relative backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slideIn",
+                plan.popular && "ring-2 ring-primary"
+              )}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -161,14 +163,11 @@ const Pricing = () => {
               </CardHeader>
 
               <CardContent className="space-y-6">
+                {/* Update button styling */}
                 <Button
                   asChild
                   variant={plan.buttonVariant as "default" | "outline"}
-                  className={`w-full h-12 ${
-                    plan.buttonVariant === "default"
-                      ? "bg-car-gradient hover:opacity-90 text-white"
-                      : "border-automotive-orange text-automotive-orange hover:bg-automotive-orange hover:text-white"
-                  }`}
+                  className="w-full h-12"
                 >
                   <Link
                     to={plan.name === "Enterprise" ? "/contact" : "/register"}
@@ -183,16 +182,17 @@ const Pricing = () => {
                   {plan.features.map((feature, featureIndex) => (
                     <div key={featureIndex} className="flex items-center gap-3">
                       {feature.included ? (
-                        <Check className="h-5 w-5 text-automotive-orange flex-shrink-0" />
+                        <Check className="h-5 w-5 text-primary flex-shrink-0" />
                       ) : (
                         <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                       )}
                       <span
-                        className={`text-sm ${
+                        className={cn(
+                          "text-sm",
                           feature.included
                             ? "text-foreground"
                             : "text-muted-foreground"
-                        }`}
+                        )}
                       >
                         {feature.name}
                       </span>
@@ -205,22 +205,19 @@ const Pricing = () => {
         </div>
 
         {/* Feature Highlights */}
-        <Card className="backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 mb-16 animate-slideIn">
+        <Card className="backdrop-blur-lg bg-card/50 border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
-              <Zap className="h-6 w-6 text-automotive-orange animate-glow" />
+              <Zap className="h-6 w-6 text-primary animate-glow" />
               Why Choose Pro?
             </CardTitle>
-            <CardDescription>
-              Discover the advanced features that make your car customizations
-              stand out
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Update feature icons */}
               <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto bg-car-gradient rounded-full flex items-center justify-center">
-                  <Camera className="h-8 w-8 text-white" />
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <Camera className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground">
                   Premium AR Filters
@@ -232,8 +229,8 @@ const Pricing = () => {
               </div>
 
               <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto bg-car-gradient rounded-full flex items-center justify-center">
-                  <Palette className="h-8 w-8 text-white" />
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <Palette className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground">Custom Decals</h3>
                 <p className="text-sm text-muted-foreground">
@@ -242,8 +239,8 @@ const Pricing = () => {
               </div>
 
               <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto bg-car-gradient rounded-full flex items-center justify-center">
-                  <Download className="h-8 w-8 text-white" />
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <Download className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground">4K Export</h3>
                 <p className="text-sm text-muted-foreground">
@@ -252,8 +249,8 @@ const Pricing = () => {
               </div>
 
               <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto bg-car-gradient rounded-full flex items-center justify-center">
-                  <Shield className="h-8 w-8 text-white" />
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <Shield className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground">
                   Priority Support

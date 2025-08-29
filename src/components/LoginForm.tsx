@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Car, Zap, Shield, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Car, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,18 +46,8 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-background" />
-      <div className="absolute top-20 left-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
-
-      {/* Floating Car Icons */}
-      <Car className="absolute top-10 left-10 w-8 h-8 text-primary opacity-30 animate-float" />
-      <Zap className="absolute top-20 right-32 w-6 h-6 text-primary opacity-30 animate-float delay-500" />
-      <Shield className="absolute bottom-32 left-20 w-7 h-7 text-primary opacity-30 animate-float delay-1000" />
-
-      <div className="relative z-10 w-full max-w-md animate-slideIn">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Car className="w-10 h-10 text-primary " />
@@ -77,7 +67,7 @@ const LoginForm = () => {
               Sign in to continue customizing your dream car
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-4 md:p-6">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}

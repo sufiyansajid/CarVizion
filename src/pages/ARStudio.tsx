@@ -15,6 +15,7 @@ import {
   Play,
   Square,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const ARStudio = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -69,11 +70,11 @@ const ARStudio = () => {
                   <Undo2 className="w-4 h-4 mr-2" />
                   Undo
                 </Button>
-                <Button variant="outline" size="sm" className="animate-glow">
+                <Button variant="outline" size="sm">
                   <Redo2 className="w-4 h-4 mr-2" />
                   Redo
                 </Button>
-                <Button className="bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90">
+                <Button variant="default">
                   <Save className="w-4 h-4 mr-2" />
                   Save Design
                 </Button>
@@ -86,9 +87,9 @@ const ARStudio = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Canvas Area */}
-        <div className="lg:col-span-3">
-          <Card className="bg-card/80 backdrop-blur-sm border-primary/20 h-[600px]">
-            <CardContent className="p-6 h-full">
+        <div className="lg:col-span-3 order-2 lg:order-1">
+          <Card className="bg-card/80 backdrop-blur-sm border-primary/20">
+            <CardContent className="p-4 md:p-6 h-[600px]">
               <div className="relative h-full rounded-lg overflow-hidden bg-secondary/20">
                 {uploadedImage ? (
                   <img
@@ -155,42 +156,42 @@ const ARStudio = () => {
           </Card>
         </div>
 
-        {/* Customization Toolbar */}
-        <div className="space-y-4">
-          {/* Tool Selection */}
-          <Card className="bg-card/80 backdrop-blur-sm border-primary/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Tools</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {customizationTools.map((tool) => (
-                <Button
-                  key={tool.id}
-                  variant={selectedTool === tool.id ? "default" : "outline"}
-                  className="w-full justify-start"
-                  onClick={() => setSelectedTool(tool.id)}
-                >
-                  <tool.icon className="w-4 h-4 mr-2" />
-                  {tool.name}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
+        {/* Tools Sidebar */}
+        <div className="space-y-4 order-1 lg:order-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-4">
+            {/* Tool buttons */}
+            {customizationTools.map((tool) => (
+              <Button
+                key={tool.id}
+                variant={selectedTool === tool.id ? "default" : "outline"}
+                className={cn(
+                  "w-full justify-start",
+                  selectedTool === tool.id
+                    ? "text-primary-foreground hover:text-primary-foreground"
+                    : "text-foreground hover:text-accent-foreground"
+                )}
+                onClick={() => setSelectedTool(tool.id)}
+              >
+                <tool.icon className="w-4 h-4 mr-2" />
+                {tool.name}
+              </Button>
+            ))}
+          </div>
 
           {/* Color Palette */}
           {selectedTool === "colors" && (
-            <Card className="bg-card/80 backdrop-blur-sm border-primary/20 animate-slideIn">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Colors</CardTitle>
-              </CardHeader>
+            <Card className="bg-card/80 backdrop-blur-sm border-border animate-slideIn">
               <CardContent>
                 <div className="grid grid-cols-4 gap-2 mb-4">
                   {colorOptions.map((color, index) => (
                     <button
                       key={index}
-                      className="w-10 h-10 rounded-lg border-2 border-border hover:border-primary transition-colors"
+                      className={cn(
+                        "w-10 h-10 rounded-lg border-2 transition-all duration-200",
+                        "hover:scale-110 hover:border-primary",
+                        "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      )}
                       style={{ backgroundColor: color }}
-                      onClick={() => {}}
                     />
                   ))}
                 </div>
@@ -245,13 +246,13 @@ const ARStudio = () => {
           )}
 
           {/* Adjustment Controls */}
-          <Card className="bg-card/80 backdrop-blur-sm border-primary/20">
+          <Card className="bg-card/80 backdrop-blur-sm border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Adjustments</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-sm font-medium mb-2 block text-foreground">
                   Opacity
                 </label>
                 <Slider

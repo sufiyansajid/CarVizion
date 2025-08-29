@@ -13,7 +13,6 @@ import {
   User,
   Settings,
   LogOut,
-  Plus,
   Upload,
   Camera,
   Car,
@@ -115,9 +114,11 @@ const Profile = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 animate-slideIn">
-          <div>
-            <h1 className="text-4xl font-bold text-primary mb-2">Profile</h1>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 animate-slideIn">
+          <div className="text-center sm:text-left">
+            <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
+              Profile
+            </h1>
             <p className="text-muted-foreground">
               Manage your car customizations and account settings
             </p>
@@ -138,21 +139,13 @@ const Profile = () => {
         </div>
 
         {/* Quick Actions Card */}
-        <Card className="mb-8 backdrop-blur-lg bg-card/50 border-border shadow-xl hover:shadow-2xl transition-all duration-300 animate-slideIn">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-primary animate-glow" />
-              Quick Actions
-            </CardTitle>
-            <CardDescription>
-              Jump right into customizing your next car design
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="mb-8">
+          <CardContent className="p-4 md:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <Button
                 asChild
-                className="h-20 flex flex-col gap-2 bg-primary hover:bg-primary/90"
+                variant="default"
+                className="h-20 flex flex-col gap-2"
               >
                 <Link to="/ar-studio">
                   <Car className="h-6 w-6" />
@@ -162,7 +155,7 @@ const Profile = () => {
 
               <Button
                 variant="outline"
-                className="h-20 flex flex-col gap-2 border-automotive-orange text-automotive-orange hover:bg-automotive-orange hover:text-white"
+                className="h-20 flex flex-col gap-2 hover:bg-accent hover:text-accent-foreground"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="h-6 w-6" />
@@ -171,7 +164,7 @@ const Profile = () => {
 
               <Button
                 variant="outline"
-                className="h-20 flex flex-col gap-2 border-automotive-orange-light text-automotive-orange-light hover:bg-automotive-orange-light hover:text-white"
+                className="h-20 flex flex-col gap-2 hover:bg-accent hover:text-accent-foreground"
               >
                 <Camera className="h-6 w-6" />
                 Live AR Mode
@@ -180,8 +173,8 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Saved Designs Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* Saved Designs */}
           <div
             className="lg:col-span-3 animate-slideIn"
@@ -219,12 +212,16 @@ const Profile = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 border-automotive-orange text-automotive-orange hover:bg-automotive-orange hover:text-white"
+                            className="flex-1 hover:bg-accent hover:text-accent-foreground"
                             onClick={() => handleEditDesign(design)}
                           >
                             Edit
                           </Button>
-                          <Button size="sm" variant="ghost" className="px-2">
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="px-2"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -270,7 +267,7 @@ const Profile = () => {
                 <div className="space-y-3">
                   <Button
                     variant="outline"
-                    className="w-full justify-start"
+                    className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                     onClick={() => setEditProfileOpen(true)}
                   >
                     <User className="h-4 w-4 mr-2" />
@@ -279,7 +276,7 @@ const Profile = () => {
 
                   <Button
                     variant="outline"
-                    className="w-full justify-start"
+                    className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                     onClick={() => setChangePasswordOpen(true)}
                   >
                     <Settings className="h-4 w-4 mr-2" />

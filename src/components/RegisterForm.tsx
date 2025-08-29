@@ -1,14 +1,8 @@
 import { useState } from "react";
-import { Eye, EyeOff, Car, Zap, Shield, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Car, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
@@ -78,286 +72,272 @@ const RegisterForm = () => {
   const watchedPassword = form.watch("password");
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-background" />
-      <div className="absolute top-20 left-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
-
-      {/* Floating Car Icons */}
-      <Car className="absolute top-10 right-10 w-8 h-8 text-primary opacity-30 animate-float" />
-      <Zap className="absolute top-32 left-32 w-6 h-6 text-primary opacity-30 animate-float delay-500" />
-      <Shield className="absolute bottom-32 right-20 w-7 h-7 text-primary opacity-30 animate-float delay-1000" />
-
-      <div className="relative z-10 w-full max-w-md animate-slideIn">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Car className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold text-primary">CarVizion</h1>
-          </div>
-          <p className="text-muted-foreground">
-            Join the future of car customization
-          </p>
-        </div>
-
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         <Card className="backdrop-blur-lg bg-card/50 border-border shadow-2xl">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">
-              Create Account
-            </CardTitle>
-            <CardDescription className="text-center">
-              Start your journey with AR car customization
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            placeholder="John"
-                            className="bg-background/50 border-border focus:ring-primary transition-colors"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            placeholder="Doe"
-                            className="bg-background/50 border-border focus:ring-primary transition-colors"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="john.doe@example.com"
-                          className="bg-background/50 border-border focus:ring-primary transition-colors"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Create a strong password"
-                            className="bg-background/50 border-border focus:ring-primary transition-colors pr-10"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      {watchedPassword && (
-                        <div className="space-y-1">
-                          <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map((level) => (
-                              <div
-                                key={level}
-                                className={`h-1 rounded-full flex-1 ${
-                                  level <= passwordStrength(watchedPassword)
-                                    ? getStrengthColor(
-                                        passwordStrength(watchedPassword)
-                                      )
-                                    : "bg-muted"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Strength:{" "}
-                            {getStrengthText(passwordStrength(watchedPassword))}
-                          </p>
-                        </div>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="Confirm your password"
-                            className="bg-background/50 border-border focus:ring-primary transition-colors pr-10"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setShowConfirmPassword(!showConfirmPassword)
-                            }
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {showConfirmPassword ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-3">
-                  <FormField
-                    control={form.control}
-                    name="acceptTerms"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center space-x-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            I agree to the{" "}
-                            <button
-                              type="button"
-                              className="text-automotive-orange hover:text-automotive-orange-light"
-                            >
-                              Terms of Service
-                            </button>{" "}
-                            and{" "}
-                            <button
-                              type="button"
-                              className="text-automotive-orange hover:text-automotive-orange-light"
-                            >
-                              Privacy Policy
-                            </button>
-                          </FormLabel>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="newsletter"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center space-x-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Subscribe to newsletter for updates and tips
-                          </FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold transition-all duration-300 group"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                      Creating Account...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      Create Account
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  )}
-                </Button>
-              </form>
-            </Form>
-
-            <div className="relative">
-              <Separator className="my-4" />
-              <span className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                OR
-              </span>
+          <CardContent className="p-4 md:p-6">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Car className="w-10 h-10 text-primary" />
+                <h1 className="text-4xl font-bold text-primary">CarVizion</h1>
+              </div>
+              <p className="text-muted-foreground">
+                Join the future of car customization
+              </p>
             </div>
 
-            <Button variant="outline" className="w-full">
-              Continue with Google
-            </Button>
+            <div className="space-y-4">
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              placeholder="John"
+                              className="bg-background/50 border-border focus:ring-primary transition-colors"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              placeholder="Doe"
+                              className="bg-background/50 border-border focus:ring-primary transition-colors"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-            <div className="text-center text-sm">
-              <span className="text-muted-foreground">
-                Already have an account?{" "}
-              </span>
-              <Link
-                to="/login"
-                className="text-primary hover:text-primary/80 font-medium transition-colors"
-              >
-                Sign in
-              </Link>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="john.doe@example.com"
+                            className="bg-background/50 border-border focus:ring-primary transition-colors"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Create a strong password"
+                              className="bg-background/50 border-border focus:ring-primary transition-colors pr-10"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        {watchedPassword && (
+                          <div className="space-y-1">
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((level) => (
+                                <div
+                                  key={level}
+                                  className={`h-1 rounded-full flex-1 ${
+                                    level <= passwordStrength(watchedPassword)
+                                      ? getStrengthColor(
+                                          passwordStrength(watchedPassword)
+                                        )
+                                      : "bg-muted"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Strength:{" "}
+                              {getStrengthText(
+                                passwordStrength(watchedPassword)
+                              )}
+                            </p>
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showConfirmPassword ? "text" : "password"}
+                              placeholder="Confirm your password"
+                              className="bg-background/50 border-border focus:ring-primary transition-colors pr-10"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                              }
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-3">
+                    <FormField
+                      control={form.control}
+                      name="acceptTerms"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center space-x-2">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              I agree to the{" "}
+                              <button
+                                type="button"
+                                className="text-automotive-orange hover:text-automotive-orange-light"
+                              >
+                                Terms of Service
+                              </button>{" "}
+                              and{" "}
+                              <button
+                                type="button"
+                                className="text-automotive-orange hover:text-automotive-orange-light"
+                              >
+                                Privacy Policy
+                              </button>
+                            </FormLabel>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="newsletter"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center space-x-2">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              Subscribe to newsletter for updates and tips
+                            </FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold transition-all duration-300 group"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        Creating Account...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        Create Account
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+
+              <div className="relative">
+                <Separator className="my-4" />
+                <span className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                  OR
+                </span>
+              </div>
+
+              <Button variant="outline" className="w-full">
+                Continue with Google
+              </Button>
+
+              <div className="text-center text-sm">
+                <span className="text-muted-foreground">
+                  Already have an account?{" "}
+                </span>
+                <Link
+                  to="/login"
+                  className="text-primary hover:text-primary/80 font-medium transition-colors"
+                >
+                  Sign in
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>
