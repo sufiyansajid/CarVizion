@@ -1,4 +1,4 @@
-import { Toaster as Sonner, Toaster } from "@/components/ui/sonner";
+import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -14,8 +14,6 @@ import NotFound from "./pages/NotFound";
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <div className="relative z-10">
         <BrowserRouter>
           <Routes>
@@ -30,6 +28,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </div>
+      <Toaster position="top-center" richColors />
     </TooltipProvider>
   </ThemeProvider>
 );

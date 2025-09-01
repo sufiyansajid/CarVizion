@@ -22,10 +22,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/lib/schemas";
 import type { LoginFormData } from "@/lib/schemas";
+import { authApi } from "@/store/authStore";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -36,13 +40,21 @@ const LoginForm = () => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
+      const response = await authApi.login(data);
 
-    // Simulate login process
-    setTimeout(() => {
+      // Store auth token
+      localStorage.setItem("token", response.token);
+
+      toast.success("Successfully logged in!");
+      navigate("/profile");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Login failed");
+      console.error("Login error:", error);
+    } finally {
       setIsLoading(false);
-      console.log("Login attempt:", data);
-    }, 2000);
+    }
   };
 
   return (

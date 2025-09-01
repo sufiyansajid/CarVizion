@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Form,
   FormControl,
@@ -18,11 +18,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/lib/schemas";
 import type { RegisterFormData } from "@/lib/schemas";
+import { authApi } from "@/store/authStore";
+import { toast } from "sonner";
 
 const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -38,13 +41,25 @@ const RegisterForm = () => {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
+      console.log("Sending registration data:", data);
 
-    // Simulate registration process
-    setTimeout(() => {
+      const response = await authApi.register(data);
+      localStorage.setItem("token", response.token);
+      toast.success("Registration successful!");
+      navigate("/profile");
+    } catch (error: any) {
+      console.error("Registration error details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.response?.data?.message || error.message,
+      });
+
+      toast.error(error.response?.data?.message || "Registration failed");
+    } finally {
       setIsLoading(false);
-      console.log("Registration attempt:", data);
-    }, 2000);
+    }
   };
 
   const passwordStrength = (password: string) => {
