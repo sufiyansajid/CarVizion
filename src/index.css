@@ -24,6 +24,7 @@
     --border: 221.2 12.5% 90%;
     --input: 221.2 12.5% 90%;
     --ring: 221.2 83.2% 53.3%;
+    --transition-speed: 200ms;
   }
 
   .dark {
@@ -141,3 +142,11 @@ body {
   background: hsl(var(--background));
   border-radius: calc(0.75rem - 2px);
 }
+
+/* @font-face {
+  font-family: "MyFont";
+  src: url("https://www.behance.net/gallery/24597223/STOKED-(free-font)/modules/187357459")
+    format("truetype");
+  font-weight: normal;
+  font-style: normal;
+} */

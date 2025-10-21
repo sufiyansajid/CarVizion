@@ -173,7 +173,10 @@ const LoginForm = () => {
               <span className="text-muted-foreground">
                 Don't have an account?{" "}
               </span>
-              <button className="text-primary hover:text-primary/80 font-medium transition-colors">
+              <button
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+                onClick={() => navigate("/register")}
+              >
                 Sign up
               </button>
             </div>

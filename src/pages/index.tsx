@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
-import Spline from "@splinetool/react-spline";
+
+const Spline = React.lazy(() => import("@splinetool/react-spline"));
 
 const Index = () => {
   const features = [
@@ -51,7 +52,7 @@ const Index = () => {
       <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/20">
+      <nav className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/20  ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between py-4 md:py-6">
             <div className="flex items-center gap-2">
@@ -72,14 +73,6 @@ const Index = () => {
                 variant="gif"
                 url="https://media.giphy.com/media/KBbr4hHl9DSahKvInO/giphy.gif"
               />
-              <Link to="/profile">
-                <Button
-                  variant="ghost"
-                  className="text-foreground hover:text-primary"
-                >
-                  Profile
-                </Button>
-              </Link>
               <Link to="/pricing">
                 <Button
                   variant="ghost"
@@ -154,7 +147,14 @@ const Index = () => {
           </div>
           {/* 3D Model */}
           <div className="aspect-square lg:aspect-auto">
-            <Spline scene="https://prod.spline.design/EqALjFSvPIIg9NgO/scene.splinecode" />
+            <React.Suspense
+              fallback={<div className="flex justify-end">Loading 3D...</div>}
+            >
+              <Spline
+                scene="https://prod.spline.design/EqALjFSvPIIg9NgO/scene.splinecode"
+                renderOnDemand={true}
+              />
+            </React.Suspense>
           </div>
         </div>
       </div>

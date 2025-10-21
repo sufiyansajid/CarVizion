@@ -5,11 +5,12 @@ import type { SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editCarDesignSchema } from "@/lib/schemas";
 import { Car } from "lucide-react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { designApi, type DesignData } from "@/store/designStore"; // Import DesignData
+import { Loader2 } from "lucide-react";
 
-import type {
-  EditCarDesignFormInput,
-  EditCarDesignFormData,
-} from "@/lib/schemas";
+import type { EditCarDesignFormInput } from "@/lib/schemas";
 
 import {
   Dialog,
@@ -30,12 +31,44 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+// Update Props interface to match your database structure
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  design?: EditCarDesignFormData; // parsed design from backend
-  onSave: (data: EditCarDesignFormData) => void;
+  design?: {
+    id?: number;
+    name: string;
+    description: string;
+    thumbnail_url?: string;
+    model_data?: any;
+    color_data?: any;
+    parts_data?: any;
+    created_at?: string;
+    updated_at?: string;
+  };
+  onSave: (data: DesignData) => void; // Use DesignData instead of EditCarDesignFormData
 };
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  isLoading?: boolean;
+}
+
+const LoadingButton: React.FC<ButtonProps> = ({
+  children,
+  isLoading,
+  ...props
+}) => (
+  <Button {...props} disabled={isLoading}>
+    {isLoading ? (
+      <Button>
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Saving...
+      </Button>
+    ) : (
+      children
+    )}
+  </Button>
+);
 
 export function EditCarDesignDialog({
   open,
@@ -43,23 +76,58 @@ export function EditCarDesignDialog({
   design,
   onSave,
 }: Props) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<EditCarDesignFormInput>({
     resolver: zodResolver(editCarDesignSchema),
     defaultValues: {
       name: design?.name || "",
       description: design?.description || "",
-      category: design?.category || "",
-      date:
-        design?.date instanceof Date
-          ? design.date.toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
     },
   });
 
-  const onSubmit: SubmitHandler<EditCarDesignFormInput> = (rawData) => {
-    const parsed = editCarDesignSchema.parse(rawData); // -> EditCarDesignFormData
-    onSave(parsed);
-    onOpenChange(false); // close after save
+  // Reset form when design changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: design?.name || "",
+        description: design?.description || "",
+      });
+    }
+  }, [open, design, form]);
+
+  const onSubmit: SubmitHandler<EditCarDesignFormInput> = async (formData) => {
+    try {
+      setIsLoading(true);
+      const parsed = editCarDesignSchema.parse(formData);
+
+      // Prepare data according to DesignData interface
+      const designData: DesignData = {
+        name: parsed.name,
+        description: parsed.description,
+        // Preserve existing data
+        model_data: design?.model_data || {},
+        color_data: design?.color_data || {},
+        parts_data: design?.parts_data || {},
+        thumbnail_url: design?.thumbnail_url,
+      };
+
+      if (design?.id) {
+        const response = await designApi.updateDesign(design.id, designData);
+        toast.success("Design updated successfully!");
+      } else {
+        const response = await designApi.createDesign(designData);
+        toast.success("Design created successfully!");
+      }
+
+      onSave(designData);
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to save design");
+      console.error("Error saving design:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -68,10 +136,12 @@ export function EditCarDesignDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Car className="h-5 w-5 text-primary" />
-            Edit Car Design
+            {design?.id ? "Edit Car Design" : "Create New Design"}
           </DialogTitle>
           <DialogDescription>
-            Update the details of your car design below.
+            {design?.id
+              ? "Update the details of your car design below."
+              : "Create a new car design with the details below."}
           </DialogDescription>
         </DialogHeader>
 
@@ -105,49 +175,18 @@ export function EditCarDesignDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter category" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      value={field.value as string} // 👈 cast unknown → string
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isLoading}
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="default">
-                Save Changes
-              </Button>
+              <LoadingButton type="submit" isLoading={isLoading}>
+                {design?.id ? "Save Changes" : "Create Design"}
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>

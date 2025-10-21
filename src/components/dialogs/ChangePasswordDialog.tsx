@@ -22,6 +22,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { changePasswordSchema } from "@/lib/schemas";
 import type { ChangePasswordFormData } from "@/lib/schemas";
+import { toast } from "sonner";
+import { userApi } from "@/store/userStore";
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -71,14 +73,30 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   };
 
   const onSubmit = async (data: ChangePasswordFormData) => {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
 
-    setTimeout(() => {
-      console.log("Submitting:", data); // now data is used
+      const promise = userApi.changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+
+      toast.promise(promise, {
+        loading: "Changing password...",
+        success: (response) => {
+          form.reset();
+          onOpenChange(false);
+          return response.message || "Password changed successfully";
+        },
+        error: (error) => {
+          const message =
+            error.response?.data?.message || "Failed to change password";
+          return message;
+        },
+      });
+    } finally {
       setIsLoading(false);
-      onOpenChange(false);
-      form.reset();
-    }, 1500);
+    }
   };
 
   const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {

@@ -1,4 +1,11 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { editProfileSchema } from "@/lib/schemas";
+import { userApi, type User, type AvatarResponse } from "@/store/userStore";
+import { toast } from "sonner";
+import { User as UserIcon, Camera, Save, X, Loader2 } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -10,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Camera, Save, X } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -19,41 +25,82 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { editProfileSchema } from "@/lib/schemas";
 import type { EditProfileFormData } from "@/lib/schemas";
+import { Textarea } from "@/components/ui/textarea";
 
 interface EditProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  user: User | null;
+  onSave?: (user: User) => void;
 }
 
 const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
   open,
   onOpenChange,
+  user,
+  onSave,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<EditProfileFormData>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
-      bio: "Car enthusiast and AR customization expert",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      bio: user?.bio || "",
     },
   });
 
   const onSubmit = async (data: EditProfileFormData) => {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
+      const promise = userApi.updateProfile(data);
 
-    // Simulate API call
-    setTimeout(() => {
+      await toast.promise(promise, {
+        loading: "Updating profile...",
+        success: (response) => {
+          onSave?.(response.user);
+          onOpenChange(false);
+          return response.message || "Profile updated successfully";
+        },
+        error: (error) => {
+          return error.response?.data?.message || "Failed to update profile";
+        },
+      });
+    } finally {
       setIsLoading(false);
-      onOpenChange(false);
-      console.log("Profile updated:", data);
-    }, 1500);
+    }
+  };
+
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    try {
+      setIsLoading(true);
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const promise = userApi.updateAvatar(formData);
+
+      await toast.promise<AvatarResponse>(promise, {
+        loading: "Uploading avatar...",
+        success: (response) => {
+          if (onSave) {
+            onSave(response.user);
+          }
+          return "Avatar updated successfully";
+        },
+        error: "Failed to upload avatar",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -61,7 +108,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <User className="h-5 w-5 text-primary animate-pulse" />
+            <UserIcon className="h-5 w-5 text-primary animate-pulse" />
             Edit Profile
           </DialogTitle>
           <DialogDescription>
@@ -71,43 +118,70 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Profile Picture */}
             <div className="flex flex-col items-center gap-4">
               <Avatar className="h-20 w-20 border-2 border-primary">
-                <AvatarImage src="/placeholder.svg" />
+                <AvatarImage src={user?.avatarUrl} />
                 <AvatarFallback>
-                  <User className="h-8 w-8" />
+                  <UserIcon className="h-8 w-8" />
                 </AvatarFallback>
               </Avatar>
+              <input
+                type="file"
+                id="avatar"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="border-primary text-primary hover:bg-primary hover:text-white"
+                onClick={() => document.getElementById("avatar")?.click()}
               >
                 <Camera className="h-4 w-4 mr-2" />
                 Change Photo
               </Button>
             </div>
 
-            {/* Form Fields */}
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      className="bg-background/50 border-input focus:ring-primary"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        type="text"
+                        className="bg-background/50 border-input focus:ring-primary"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        type="text"
+                        className="bg-background/50 border-input focus:ring-primary"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -117,9 +191,10 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
+                      {...field}
+                      value={field.value ?? ""}
                       type="email"
                       className="bg-background/50 border-input focus:ring-primary"
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -132,12 +207,13 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>Phone Number</FormLabel>
                   <FormControl>
                     <Input
+                      {...field}
+                      value={field.value ?? ""}
                       type="tel"
                       className="bg-background/50 border-input focus:ring-primary"
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -152,11 +228,11 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                 <FormItem>
                   <FormLabel>Bio</FormLabel>
                   <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Tell us about yourself..."
-                      className="bg-background/50 border-input focus:ring-primary"
+                    <Textarea
                       {...field}
+                      value={field.value ?? ""}
+                      placeholder="Tell us about yourself..."
+                      className="min-h-[100px] resize-none bg-background/50 border-input focus:ring-primary"
                     />
                   </FormControl>
                   <FormMessage />
@@ -169,22 +245,21 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="border-border hover:bg-muted/50"
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading} variant="default">
+              <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
                     Save Changes
-                  </div>
+                  </>
                 )}
               </Button>
             </DialogFooter>

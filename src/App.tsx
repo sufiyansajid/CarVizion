@@ -1,7 +1,6 @@
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import Index from "./pages/index";
 import Login from "./pages/Login";
@@ -10,6 +9,7 @@ import Profile from "./pages/Profile";
 import ARStudio from "./pages/ARStudio";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
+import LandingPage from "./pages/LandingPage";
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -23,7 +23,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/ar-studio" element={<ARStudio />} />
             <Route path="/pricing" element={<Pricing />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/landingpage" element={<LandingPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

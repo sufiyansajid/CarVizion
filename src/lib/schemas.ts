@@ -28,10 +28,20 @@ export const registerSchema = z
   });
 
 export const editProfileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().optional().or(z.literal("")),
-  bio: z.string().optional().or(z.literal("")),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z
+    .string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(15, "Phone number must not exceed 15 digits")
+    .optional()
+    .nullable(),
+  bio: z
+    .string()
+    .max(500, "Bio must not exceed 500 characters")
+    .optional()
+    .nullable(),
 });
 
 export const changePasswordSchema = z
@@ -53,16 +63,6 @@ export const changePasswordSchema = z
 export const editCarDesignSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string(),
-  category: z.string(),
-  date: z
-    .string()
-    .or(z.date())
-    .transform((val) => {
-      if (typeof val === "string") {
-        return new Date(val);
-      }
-      return val;
-    }),
 });
 
 // ✅ Types for all forms
