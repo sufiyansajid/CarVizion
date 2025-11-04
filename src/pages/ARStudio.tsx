@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import {
   Camera,
@@ -9,19 +8,24 @@ import {
   Palette,
   Settings,
   Sticker,
+  CarFront,
+  Lightbulb,
+  Sun,
+  Sparkles,
+  PanelsTopLeft,
+  PaintBucket,
   Save,
   Undo2,
   Redo2,
   Play,
   Square,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ARStudio = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const [selectedTool, setSelectedTool] = useState("colors");
-  const [opacity, setOpacity] = useState([80]);
-  const [size, setSize] = useState([50]);
+  const [selectedTool, setSelectedTool] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,29 +35,44 @@ const ARStudio = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setUploadedImage(e.target?.result as string);
-        // In a real app, you would also upload to Supabase Storage
-        console.log("Image uploaded:", file.name);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const customizationTools = [
-    { id: "colors", name: "Colors", icon: Palette },
+    { id: "paint", name: "Paint", icon: PaintBucket },
+    { id: "wraps", name: "Wraps", icon: PanelsTopLeft },
     { id: "rims", name: "Rims", icon: Settings },
     { id: "decals", name: "Decals", icon: Sticker },
+    { id: "bumpers", name: "Bumpers", icon: CarFront },
+    { id: "sideskirts", name: "Side Skirts", icon: CarFront },
+    { id: "headlights", name: "Headlights", icon: Lightbulb },
+    { id: "taillights", name: "Taillights", icon: Sun },
+    { id: "underglow", name: "Under Glow", icon: Sparkles },
+    { id: "windowtint", name: "Window Tint", icon: Palette },
   ];
 
   const colorOptions = [
-    "#ff5e1a", // Primary
-    "#ef4444", // Red
-    "#3b82f6", // Blue
-    "#10b981", // Green
-    "#f59e0b", // Yellow
-    "#8b5cf6", // Purple
-    "#ffffff", // White
-    "#000000", // Black
+    "#ff5e1a",
+    "#ef4444",
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ffffff",
+    "#000000",
   ];
+
+  const wrapOptions = [
+    "Matte Black",
+    "Chrome",
+    "Carbon Fiber",
+    "Camo",
+    "Gloss Red",
+  ];
+  const lightOptions = ["White", "Yellow", "Blue", "RGB Glow"];
+  const tintOptions = ["Light", "Medium", "Dark", "Limo"];
 
   return (
     <div className="min-h-screen bg-background p-4 animate-slideIn">
@@ -67,16 +86,13 @@ const ARStudio = () => {
               </CardTitle>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
-                  <Undo2 className="w-4 h-4 mr-2" />
-                  Undo
+                  <Undo2 className="w-4 h-4 mr-2" /> Undo
                 </Button>
                 <Button variant="outline" size="sm">
-                  <Redo2 className="w-4 h-4 mr-2" />
-                  Redo
+                  <Redo2 className="w-4 h-4 mr-2" /> Redo
                 </Button>
                 <Button variant="default">
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Design
+                  <Save className="w-4 h-4 mr-2" /> Save Design
                 </Button>
               </div>
             </div>
@@ -84,17 +100,40 @@ const ARStudio = () => {
         </Card>
       </div>
 
-      {/* Main Content */}
+      {/* Main Section */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Canvas Area */}
+        {/* Canvas Area */}
         <div className="lg:col-span-3 order-2 lg:order-1">
           <Card className="bg-card/80 backdrop-blur-sm border-primary/20">
             <CardContent className="p-4 md:p-6 h-[600px]">
-              <div className="relative h-full rounded-lg overflow-hidden bg-secondary/20">
-                {uploadedImage ? (
+              <div className="relative h-full rounded-lg overflow-hidden bg-secondary/20 flex items-center justify-center">
+                {isRecording ? (
+                  <video
+                    ref={(video) => {
+                      if (
+                        video &&
+                        video.srcObject === null &&
+                        navigator.mediaDevices
+                      ) {
+                        navigator.mediaDevices
+                          .getUserMedia({ video: true })
+                          .then((stream) => {
+                            video.srcObject = stream;
+                            video.play();
+                          })
+                          .catch((err) =>
+                            console.error("Camera access denied:", err)
+                          );
+                      }
+                    }}
+                    className="w-full h-full object-contain"
+                    autoPlay
+                    muted
+                  />
+                ) : uploadedImage ? (
                   <img
                     src={uploadedImage}
-                    alt="Car for customization"
+                    alt="Car Preview"
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -106,186 +145,256 @@ const ARStudio = () => {
                     <p className="text-center mb-6">
                       Upload a car image or start live camera feed
                     </p>
-
-                    {/* Camera Controls */}
-                    <div className="flex gap-4 mb-4">
-                      <Button
-                        variant={isRecording ? "destructive" : "default"}
-                        onClick={() => setIsRecording(!isRecording)}
-                        className="animate-glow"
-                      >
-                        {isRecording ? (
-                          <>
-                            <Square className="w-4 h-4 mr-2" />
-                            Stop Camera
-                          </>
-                        ) : (
-                          <>
-                            <Play className="w-4 h-4 mr-2" />
-                            Start Camera
-                          </>
-                        )}
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="animate-glow"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Image
-                      </Button>
-                    </div>
-
-                    <Input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
                   </div>
                 )}
 
-                {/* AR Overlay Elements would go here */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {/* Placeholder for AR modifications */}
+                {/* Always Visible Controls */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4">
+                  <Button
+                    variant="default"
+                    onClick={() => setIsRecording(true)}
+                    disabled={isRecording}
+                  >
+                    <Play className="w-4 h-4 mr-2" /> Start Camera
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      const video = document.querySelector("video");
+                      if (video && video.srcObject) {
+                        const stream = video.srcObject as MediaStream;
+                        stream.getTracks().forEach((track) => track.stop()); // stop all tracks
+                        video.srcObject = null; // 👈 clear video source
+                      }
+                      setIsRecording(false);
+                    }}
+                    disabled={!isRecording}
+                  >
+                    <Square className="w-4 h-4 mr-2" /> Stop Camera
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" /> Upload Image
+                  </Button>
+
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tools Sidebar */}
-        <div className="space-y-4 order-1 lg:order-2">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-4">
-            {/* Tool buttons */}
-            {customizationTools.map((tool) => (
+        {/* Sidebar Tools (fixed layout, no flicker) */}
+        <div className="space-y-3 order-1 lg:order-2 sticky top-4 overflow-y-auto max-h-[80vh]">
+          {customizationTools.map((tool) => (
+            <div key={tool.id}>
               <Button
-                key={tool.id}
                 variant={selectedTool === tool.id ? "default" : "outline"}
                 className={cn(
-                  "w-full justify-start",
+                  "w-full justify-start transition-all",
                   selectedTool === tool.id
-                    ? "text-primary-foreground hover:text-primary-foreground"
+                    ? "text-primary-foreground"
                     : "text-foreground hover:text-accent-foreground"
                 )}
-                onClick={() => setSelectedTool(tool.id)}
+                onClick={() =>
+                  setSelectedTool(selectedTool === tool.id ? "" : tool.id)
+                }
               >
                 <tool.icon className="w-4 h-4 mr-2" />
                 {tool.name}
               </Button>
-            ))}
-          </div>
 
-          {/* Color Palette */}
-          {selectedTool === "colors" && (
-            <Card className="bg-card/80 backdrop-blur-sm border-border animate-slideIn">
-              <CardContent>
-                <div className="grid grid-cols-4 gap-2 mb-4">
-                  {colorOptions.map((color, index) => (
-                    <button
-                      key={index}
-                      className={cn(
-                        "w-10 h-10 rounded-lg border-2 transition-all duration-200",
-                        "hover:scale-110 hover:border-primary",
-                        "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                      )}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+              {/* Collapsible panel directly below button */}
+              {selectedTool === tool.id && (
+                <div className="mt-2 transition-all duration-300 ease-in-out">
+                  {/* Paint */}
+                  {tool.id === "paint" && (
+                    <>
+                      <Card className="bg-card/80 border-border mb-3">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">
+                            Paint Colors
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-4 gap-2">
+                          {colorOptions.map((color, i) => (
+                            <button
+                              key={i}
+                              style={{ backgroundColor: color }}
+                              className="w-8 h-8 rounded-md border hover:scale-110 transition"
+                            />
+                          ))}
+                        </CardContent>
+                      </Card>
+                      <AdjustmentCard
+                        title="Paint Adjustments"
+                        sliders={["Brightness", "Saturation", "Hue"]}
+                      />
+                    </>
+                  )}
+
+                  {/* Wraps */}
+                  {tool.id === "wraps" && (
+                    <>
+                      <Card className="bg-card/80 border-border mb-3">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Wrap Styles</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-2 gap-2">
+                          {wrapOptions.map((wrap) => (
+                            <Button key={wrap} variant="outline" size="sm">
+                              {wrap}
+                            </Button>
+                          ))}
+                        </CardContent>
+                      </Card>
+                      <AdjustmentCard
+                        title="Wrap Adjustments"
+                        sliders={["Gloss", "Reflectivity"]}
+                      />
+                    </>
+                  )}
+
+                  {/* Rims */}
+                  {tool.id === "rims" && (
+                    <Card className="bg-card/80 border-border">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Rim Styles</CardTitle>
+                      </CardHeader>
+                      <CardContent className="grid grid-cols-2 gap-2">
+                        {["Sport", "Classic", "Racing", "Luxury"].map(
+                          (style) => (
+                            <Button key={style} variant="outline" size="sm">
+                              {style}
+                            </Button>
+                          )
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Decals */}
+                  {tool.id === "decals" && (
+                    <Card className="bg-card/80 border-border">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Decal Options</CardTitle>
+                      </CardHeader>
+                      <CardContent className="grid grid-cols-2 gap-2">
+                        {["Stripes", "Flames", "Racing", "Custom"].map(
+                          (decal) => (
+                            <Button key={decal} variant="outline" size="sm">
+                              {decal}
+                            </Button>
+                          )
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Headlights / Taillights */}
+                  {(tool.id === "headlights" || tool.id === "taillights") && (
+                    <Card className="bg-card/80 border-border">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">
+                          {tool.name} Colors
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="grid grid-cols-2 gap-2">
+                        {lightOptions.map((opt) => (
+                          <Button key={opt} variant="outline" size="sm">
+                            {opt}
+                          </Button>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Under Glow */}
+                  {tool.id === "underglow" && (
+                    <>
+                      <Card className="bg-card/80 border-border mb-3">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Glow Colors</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-4 gap-2">
+                          {colorOptions.map((c, i) => (
+                            <button
+                              key={i}
+                              style={{ backgroundColor: c }}
+                              className="w-8 h-8 rounded-md border hover:scale-110 transition"
+                            />
+                          ))}
+                        </CardContent>
+                      </Card>
+                      <AdjustmentCard
+                        title="Glow Intensity"
+                        sliders={["Intensity"]}
+                      />
+                    </>
+                  )}
+
+                  {/* Window Tint */}
+                  {tool.id === "windowtint" && (
+                    <Card className="bg-card/80 border-border">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Tint Levels</CardTitle>
+                      </CardHeader>
+                      <CardContent className="grid grid-cols-2 gap-2">
+                        {tintOptions.map((t) => (
+                          <Button key={t} variant="outline" size="sm">
+                            {t}
+                          </Button>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Rims Options */}
-          {selectedTool === "rims" && (
-            <Card className="bg-card/80 backdrop-blur-sm border-primary/20 animate-slideIn">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Rim Styles</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {["Sport", "Classic", "Racing", "Luxury"].map((style) => (
-                    <Button
-                      key={style}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                    >
-                      {style}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Decals */}
-          {selectedTool === "decals" && (
-            <Card className="bg-card/80 backdrop-blur-sm border-primary/20 animate-slideIn">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Decals</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {["Stripes", "Flames", "Racing", "Custom"].map((decal) => (
-                    <Button
-                      key={decal}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                    >
-                      {decal}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Adjustment Controls */}
-          <Card className="bg-card/80 backdrop-blur-sm border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Adjustments</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block text-foreground">
-                  Opacity
-                </label>
-                <Slider
-                  value={opacity}
-                  onValueChange={setOpacity}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
-                <span className="text-xs text-muted-foreground">
-                  {opacity[0]}%
-                </span>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Size</label>
-                <Slider
-                  value={size}
-                  onValueChange={setSize}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
-                <span className="text-xs text-muted-foreground">
-                  {size[0]}%
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 };
+
+/* 🔧 Small reusable adjustment card component */
+const AdjustmentCard = ({
+  title,
+  sliders,
+}: {
+  title: string;
+  sliders: string[];
+}) => (
+  <Card className="bg-card/80 border-border">
+    <CardHeader className="pb-2 flex items-center gap-2">
+      <SlidersHorizontal className="w-4 h-4" />
+      <CardTitle className="text-sm">{title}</CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-3">
+      {sliders.map((label) => (
+        <div key={label}>
+          <label className="text-xs">{label}</label>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            className="w-full accent-primary"
+          />
+        </div>
+      ))}
+    </CardContent>
+  </Card>
+);
 
 export default ARStudio;

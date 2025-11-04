@@ -126,7 +126,7 @@ const LandingPage = () => {
           autoPlay
           loop
           muted
-          src="/video/landing-page.mp4"
+          src="/video/256067.mp4"
         ></video>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
