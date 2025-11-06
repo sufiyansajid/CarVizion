@@ -29,7 +29,7 @@ import { EditCarDesignDialog } from "@/components/dialogs/EditCarDesignDialog";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { designApi, type DesignData } from "@/store/designStore";
-import axios from "axios";
+import api from "@/store/baseApi";
 
 const Profile = () => {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -49,12 +49,9 @@ const Profile = () => {
         const token = localStorage.getItem("token");
         console.log("Token used:", token);
 
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/users/profile`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await api.get(`/api/users/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         console.log("Profile response:", res.data);
         setUser(res.data.user);
       } catch (err: any) {
@@ -62,18 +59,16 @@ const Profile = () => {
           "Failed to load user:",
           err.response?.data || err.message
         );
-        // optional: redirect to login if unauthorized
       }
     };
     fetchUser();
   }, []);
 
-  if (!user) return <p>Loading...</p>;
+  // useEffect(() => {
+  //   fetchUserDesigns();
+  // }, []);
 
-  // Fetch user designs on component mount
-  useEffect(() => {
-    fetchUserDesigns();
-  }, []);
+  if (!user) return <p>Loading...</p>;
 
   const fetchUserDesigns = async () => {
     try {
@@ -136,6 +131,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     toast.success("Logged out successfully!");
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
