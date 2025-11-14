@@ -10,6 +10,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   User,
   Settings,
   LogOut,
@@ -20,9 +26,10 @@ import {
   Trash2,
   Zap,
   Shield,
+  Eye,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import EditProfileDialog from "@/components/dialogs/EditProfileDialog";
 import ChangePasswordDialog from "@/components/dialogs/ChangePasswordDialog";
 import { EditCarDesignDialog } from "@/components/dialogs/EditCarDesignDialog";
@@ -32,6 +39,28 @@ import { designApi, type DesignData } from "@/store/designStore";
 import api from "@/store/baseApi";
 
 const Profile = () => {
+  const toImageUrl = (url?: string) => {
+    if (!url) return url as any;
+    if (url.startsWith("/uploads")) {
+      // Ensure absolute URL to backend for static files
+      const base = (api.defaults.baseURL || "").replace(/\/$/, "");
+      return `${base}${url}`;
+    }
+    return url;
+  };
+
+  const toModelUrl = (url?: string | null) => {
+    if (!url) return "";
+    if (url.startsWith("/uploads")) {
+      const base = (api.defaults.baseURL || "").replace(/\/$/, "");
+      return `${base}${url}`;
+    }
+    return url;
+  };
+
+  const ModelViewer = (props: any) =>
+    React.createElement("model-viewer" as any, props);
+
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [editDesignOpen, setEditDesignOpen] = useState(false);
@@ -39,6 +68,10 @@ const Profile = () => {
   const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [viewModelOpen, setViewModelOpen] = useState(false);
+  const [activeModelUrl, setActiveModelUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const navigate = useNavigate();
 
   const [user, setUser] = useState<any>(null);
@@ -64,9 +97,12 @@ const Profile = () => {
     fetchUser();
   }, []);
 
-  // useEffect(() => {
-  //   fetchUserDesigns();
-  // }, []);
+  useEffect(() => {
+    // Load designs after user profile is available
+    if (user?.id) {
+      fetchUserDesigns();
+    }
+  }, [user]);
 
   if (!user) return <p>Loading...</p>;
 
@@ -129,6 +165,73 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+
+      // Convert file to base64 data URL
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const dataUrl = reader.result as string;
+
+          // Send as JSON with dataUrl
+          const response = await api.post("/api/users/avatar", {
+            dataUrl: dataUrl,
+          });
+
+          setUser(response.data.user);
+          toast.success("Avatar updated successfully!");
+        } catch (error: any) {
+          toast.error(
+            error.response?.data?.message || "Failed to upload avatar"
+          );
+          console.error("Error uploading avatar:", error);
+        } finally {
+          setUploadingAvatar(false);
+          // Reset input
+          if (avatarInputRef.current) {
+            avatarInputRef.current.value = "";
+          }
+        }
+      };
+
+      reader.onerror = () => {
+        toast.error("Failed to read file");
+        setUploadingAvatar(false);
+        if (avatarInputRef.current) {
+          avatarInputRef.current.value = "";
+        }
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      toast.error("Failed to process file");
+      console.error("Error processing file:", error);
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleLogout = () => {
     toast.success("Logged out successfully!");
     localStorage.removeItem("token");
@@ -156,14 +259,35 @@ const Profile = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={user.avatar} />
-              <AvatarFallback>
-                <User className="h-6 w-6" />
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative group">
+              <Avatar className="h-16 w-16 cursor-pointer border-2 border-primary/20 hover:border-primary transition-colors">
+                <AvatarImage
+                  src={
+                    user.avatarUrl
+                      ? user.avatarUrl.startsWith("/uploads")
+                        ? `http://localhost:3001${user.avatarUrl}`
+                        : user.avatarUrl
+                      : undefined
+                  }
+                />
+                <AvatarFallback className="bg-primary/10">
+                  {user.firstName?.[0]?.toUpperCase()}
+                  {user.lastName?.[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-opacity cursor-pointer">
+                <Camera className="h-5 w-5 text-white" />
+              </div>
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute inset-0 rounded-full"
+                disabled={uploadingAvatar}
+              />
+            </div>
             <div>
-              <p className="font-semibold text-foreground">{user.firstName}</p>
+              <p className="font-semibold text-foreground">
+                {user.firstName} {user.lastName}
+              </p>
               <p className="text-sm text-muted-foreground">
                 {user.isPremium ? "Premium Member" : "Free Member"}
               </p>
@@ -231,7 +355,7 @@ const Profile = () => {
                 ) : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {savedDesigns.map((design, index) => (
+                      {savedDesigns.map((design) => (
                         <Card
                           key={design.id}
                           className="group backdrop-blur-lg bg-card/50 border-border hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer"
@@ -239,7 +363,7 @@ const Profile = () => {
                           <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
                             {design.thumbnail_url ? (
                               <img
-                                src={design.thumbnail_url}
+                                src={toImageUrl(design.thumbnail_url)}
                                 alt={design.name}
                                 className="w-full h-full object-cover rounded-t-lg"
                               />
@@ -271,6 +395,22 @@ const Profile = () => {
                               >
                                 Edit
                               </Button>
+                              {design.model_data?.model_url && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="px-2 hover:bg-accent hover:text-accent-foreground"
+                                  onClick={() => {
+                                    setActiveModelUrl(
+                                      toModelUrl(design.model_data?.model_url)
+                                    );
+                                    setViewModelOpen(true);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View 3D
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="destructive"
@@ -393,12 +533,19 @@ const Profile = () => {
         <Car className="absolute top-1/2 left-10 w-8 h-8 text-automotive-orange-light opacity-20 animate-float" />
       </div>
 
-      {/* Hidden File Input */}
+      {/* Hidden File Inputs */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
+        className="hidden"
+      />
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleAvatarUpload}
         className="hidden"
       />
 
@@ -418,6 +565,31 @@ const Profile = () => {
         design={selectedDesign}
         onSave={handleSaveDesign}
       />
+      <Dialog open={viewModelOpen} onOpenChange={setViewModelOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>3D Model Preview</DialogTitle>
+          </DialogHeader>
+          {activeModelUrl ? (
+            <ModelViewer
+              src={activeModelUrl}
+              camera-controls
+              auto-rotate
+              style={{
+                width: "100%",
+                height: "480px",
+                background: "transparent",
+              }}
+              exposure="0.9"
+              shadow-intensity="0.5"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No model available for this design.
+            </p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

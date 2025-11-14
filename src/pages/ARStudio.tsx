@@ -2,6 +2,9 @@ import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { designApi } from "@/store/designStore";
+import api from "@/store/baseApi";
 import {
   Camera,
   Upload,
@@ -27,6 +30,7 @@ const ARStudio = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [selectedTool, setSelectedTool] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [modelUrl, setModelUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,11 +38,39 @@ const ARStudio = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setUploadedImage(e.target?.result as string);
+        const dataUrl = e.target?.result as string;
+        setUploadedImage(dataUrl);
+        // Auto-convert to 3D via backend
+        (async () => {
+          try {
+            const converting = toast.loading("Converting image to 3D model...");
+            const res = await designApi.convertImageTo3D(dataUrl);
+            setModelUrl(res.model_url);
+            toast.success("3D model generated", { id: converting });
+          } catch (err: any) {
+            toast.error(
+              err?.response?.data?.message ||
+                "Failed to convert image to 3D model"
+            );
+            console.error("convertImageTo3D error:", err);
+          }
+        })();
       };
       reader.readAsDataURL(file);
     }
   };
+
+  const toAbsoluteUrl = (url?: string | null) => {
+    if (!url) return url || "";
+    if (url.startsWith("/uploads")) {
+      const base = (api.defaults.baseURL || "").replace(/\/$/, "");
+      return `${base}${url}`;
+    }
+    return url;
+  };
+
+  const ModelViewer = (props: any) =>
+    React.createElement("model-viewer" as any, props);
 
   const customizationTools = [
     { id: "paint", name: "Paint", icon: PaintBucket },
@@ -91,7 +123,45 @@ const ARStudio = () => {
                 <Button variant="outline" size="sm">
                   <Redo2 className="w-4 h-4 mr-2" /> Redo
                 </Button>
-                <Button variant="default">
+                <Button
+                  variant="default"
+                  onClick={async () => {
+                    try {
+                      // If we have a data URL image, upload it to get a public URL first
+                      let thumbnailUrl: string | undefined = undefined;
+                      if (uploadedImage) {
+                        if (uploadedImage.startsWith("data:")) {
+                          const uploadRes = await designApi.uploadImageDataUrl(
+                            uploadedImage
+                          );
+                          // Backend returns URL relative to backend host (e.g., /uploads/filename.png)
+                          // The axios baseURL is http://localhost:3001, so consumers can use the relative URL directly
+                          thumbnailUrl = uploadRes.url;
+                        } else if (uploadedImage.startsWith("http")) {
+                          thumbnailUrl = uploadedImage;
+                        }
+                      }
+
+                      const payload = {
+                        name: "AR Studio Design",
+                        description: selectedTool
+                          ? `Edited with ${selectedTool}`
+                          : "Created in AR Studio",
+                        model_data: { model_url: modelUrl || undefined }, // include model url if available
+                        color_data: {}, // Extend later
+                        parts_data: {}, // Extend later
+                        thumbnail_url: thumbnailUrl,
+                      };
+                      await designApi.createDesign(payload);
+                      toast.success("Design saved successfully");
+                    } catch (err: any) {
+                      const message =
+                        err?.response?.data?.message || "Failed to save design";
+                      toast.error(message);
+                      console.error("Save design error:", err);
+                    }
+                  }}
+                >
                   <Save className="w-4 h-4 mr-2" /> Save Design
                 </Button>
               </div>
@@ -190,6 +260,24 @@ const ARStudio = () => {
                   />
                 </div>
               </div>
+
+              {/* 3D Model Preview */}
+              {modelUrl && (
+                <div className="mt-4">
+                  <ModelViewer
+                    src={toAbsoluteUrl(modelUrl)}
+                    camera-controls
+                    auto-rotate
+                    style={{
+                      width: "100%",
+                      height: "360px",
+                      background: "transparent",
+                    }}
+                    exposure="0.9"
+                    shadow-intensity="0.5"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

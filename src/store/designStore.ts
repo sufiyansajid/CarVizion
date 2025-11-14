@@ -42,6 +42,24 @@ export const designApi = {
     return response.data;
   },
 
+  uploadImageDataUrl: async (
+    dataUrl: string
+  ): Promise<{ message: string; url: string }> => {
+    const response = await api.post("/api/uploads/image", { dataUrl });
+    return response.data;
+  },
+
+  convertImageTo3D: async (
+    dataUrl: string
+  ): Promise<{ message: string; model_url: string; content_type?: string }> => {
+    const response = await api.post(
+      "/api/ai/image-to-3d",
+      { dataUrl },
+      { timeout: 600000 }
+    );
+    return response.data;
+  },
+
   updateDesign: async (
     id: number,
     data: DesignData
@@ -55,6 +73,11 @@ export const designApi = {
     return response.data;
   },
 
+  getDesignById: async (id: number): Promise<DesignResponse> => {
+    const response = await api.get(`/api/designs/${id}`);
+    return response.data;
+  },
+
   deleteDesign: async (id: number): Promise<{ message: string }> => {
     const response = await api.delete(`/api/designs/${id}`);
     return response.data;
@@ -63,17 +86,11 @@ export const designApi = {
   // Optional: Upload thumbnail
   uploadThumbnail: async (
     designId: number,
-    file: File
-  ): Promise<{ thumbnail_url: string }> => {
-    const formData = new FormData();
-    formData.append("thumbnail", file);
-    const response = await api.post(
-      `/api/designs/${designId}/thumbnail`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    thumbnailUrl: string
+  ): Promise<{ message: string; thumbnail_url: string }> => {
+    const response = await api.patch(`/api/designs/${designId}/thumbnail`, {
+      thumbnail_url: thumbnailUrl,
+    });
     return response.data;
   },
 };
