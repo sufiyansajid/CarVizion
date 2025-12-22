@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import ARStudio from "./pages/ARStudio";
+
 import Pricing from "./pages/Pricing";
 import Features from "./pages/Features";
 import About from "./pages/About";
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/ar-studio" element={<ARStudio />} />
+
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/features" element={<Features />} />
             <Route path="/about" element={<About />} />

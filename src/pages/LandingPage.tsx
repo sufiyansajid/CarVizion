@@ -478,8 +478,8 @@ const LandingPage = () => {
           autoPlay
           loop
           muted
-          // src="/video/256067.mp4"
-          src="https://drive.google.com/file/d/1e82PiUzQd3co8Io46ik0whR1Irji80Aa/view?usp=sharing"
+          src="/video/256067.mp4"
+          // src="https://drive.google.com/file/d/1e82PiUzQd3co8Io46ik0whR1Irji80Aa/view?usp=sharing"
         ></video>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pb-16 sm:pb-20">
