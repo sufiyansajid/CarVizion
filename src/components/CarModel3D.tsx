@@ -13,6 +13,10 @@ interface CarModel3DProps {
   underglowColor?: string;
   underglowIntensity?: number;
   headlightColor?: string;
+  taillightColor?: string;
+  wrapType?: string;
+  spoilerStyle?: string;
+  spoilerColor?: string;
   onModelLoad?: () => void;
   debugMode?: boolean;
   showSpoiler?: boolean;

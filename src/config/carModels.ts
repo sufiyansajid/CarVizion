@@ -22,10 +22,10 @@ export const CAR_MODELS: CarModelConfig[] = [
     description: 'Performance tuned version with aerodynamic kit.'
   },
   {
-    id: 'sport',
-    name: 'Genesis Sport GT',
+    id: 'porsche',
+    name: 'Porsche 911',
     path: '/models/Porsche911.glb',
     type: 'sport',
-    description: 'Performance tuned version with aerodynamic kit.'
+    description: 'Iconic sports car with precision handling.'
   }
 ];

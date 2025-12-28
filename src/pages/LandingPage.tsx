@@ -478,7 +478,8 @@ const LandingPage = () => {
           autoPlay
           loop
           muted
-          src="/video/256067.mp4"
+          // src="/video/256067.mp4"
+          src="/video/video.mp4"
           // src="https://drive.google.com/file/d/1e82PiUzQd3co8Io46ik0whR1Irji80Aa/view?usp=sharing"
         ></video>
 

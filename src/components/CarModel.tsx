@@ -14,11 +14,14 @@ type CarModelProps = ThreeElements['group'] & {
   underglowColor?: string;
   underglowIntensity?: number;
   headlightColor?: string;
+  taillightColor?: string;
+  wrapType?: string;
+  spoilerStyle?: string;
+  spoilerColor?: string;
   onModelLoad?: () => void;
   debugMode?: boolean;
   showSpoiler?: boolean;
   decalUrl?: string;
-  // Standardized prop name
   onPartSelect?: (partId: string) => void;
 };
 
@@ -32,6 +35,10 @@ export function CarModel({
   underglowColor,
   underglowIntensity = 0,
   headlightColor,
+  taillightColor,
+  wrapType,
+  spoilerStyle = 'wing',
+  spoilerColor,
   onModelLoad,
   debugMode = false,
   showSpoiler = false,
@@ -47,11 +54,13 @@ export function CarModel({
     rims: THREE.Mesh[];
     windows: THREE.Mesh[];
     lights: THREE.Mesh[];
+    taillights: THREE.Mesh[];
   }>({
     body: [],
     rims: [],
     windows: [],
     lights: [],
+    taillights: [],
   });
   
   const originalMaterials = useRef<Map<string, THREE.Material | THREE.Material[]>>(new Map());
@@ -63,10 +72,13 @@ export function CarModel({
       let rims: THREE.Mesh[] = [];
       let windows: THREE.Mesh[] = [];
       let lights: THREE.Mesh[] = [];
+      let taillights: THREE.Mesh[] = [];
       const allMeshes: THREE.Mesh[] = [];
       let maxVolume = 0;
 
-      // Pass 1: Analyze geometry stats and cache originals
+      console.log('=== CAR MODEL MESH ANALYSIS ===');
+
+      // Pass 1: Collect all meshes and find max volume
       scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
@@ -84,111 +96,236 @@ export function CarModel({
         }
       });
 
-      // Pass 2: Categorize
+      console.log(`Total meshes found: ${allMeshes.length}`);
+      console.log(`Max volume: ${maxVolume.toFixed(4)}`);
+
+      // Keywords for part detection (expanded)
+      const rimKeywords = ['wheel', 'tire', 'rim', 'tyre', 'hub', 'rotor', 'brake', 'caliper'];
+      const windowKeywords = ['window', 'glass', 'windshield', 'windscreen', 'mirror'];
+      const headlightKeywords = ['headlight', 'front_light', 'fog', 'beam', 'led'];
+      const taillightKeywords = ['taillight', 'tail_light', 'rear_light', 'brake_light', 'rear', 'back_light'];
+      const lightKeywords = ['light', 'lamp', 'headlight', 'taillight', 'fog', 'beam', 'led', 'bulb', 'indicator', 'signal'];
+      const bodyKeywords = ['body', 'door', 'hood', 'bonnet', 'trunk', 'roof', 'fender', 'bumper', 'panel', 'frame', 'chassis'];
+
+      // Pass 2: Categorize with improved logic
       if (hasManualMapping(CAR_3D_MAPPING)) {
         const result = applyManualMapping(allMeshes, CAR_3D_MAPPING);
         body = result.body; rims = result.rims; windows = result.windows; lights = result.lights;
+        console.log('Using manual mapping');
       } else {
-        if (allMeshes.length <= 3) {
-           allMeshes.forEach(mesh => body.push(mesh));
-        } else {
-          allMeshes.forEach((mesh) => {
-            const name = mesh.name.toLowerCase();
-            const geometry = mesh.geometry;
-            const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-            const bbox = geometry.boundingBox;
-            
-            if (!bbox) { body.push(mesh); return; }
+        console.log('Using automatic detection');
+        
+        allMeshes.forEach((mesh) => {
+          const name = mesh.name.toLowerCase();
+          const geometry = mesh.geometry;
+          const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+          const bbox = geometry.boundingBox;
+          
+          if (!bbox) { 
+            body.push(mesh); 
+            console.log(`  ${mesh.name} -> BODY (no bbox)`);
+            return; 
+          }
 
-            const size = new THREE.Vector3();
-            bbox.getSize(size);
-            const volume = size.x * size.y * size.z;
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const minDim = Math.min(size.x, size.y, size.z);
-            const worldPos = new THREE.Vector3();
-            mesh.getWorldPosition(worldPos);
+          const size = new THREE.Vector3();
+          bbox.getSize(size);
+          const volume = size.x * size.y * size.z;
+          const volumeRatio = volume / maxVolume;
 
-            let category = 'body';
+          let category = 'body';
+          let reason = 'default';
 
-            if (name.includes('wheel') || name.includes('tire') || name.includes('rim')) category = 'rim';
-            else if (name.includes('window') || name.includes('glass')) category = 'window';
-            else if (name.includes('light') || name.includes('lamp') || name.includes('head')) {
-               if (volume < maxVolume * 0.2) category = 'light';
+          // 1. Name-based detection (highest priority)
+          if (rimKeywords.some(kw => name.includes(kw))) {
+            category = 'rim';
+            reason = 'name match (rim keywords)';
+          } else if (windowKeywords.some(kw => name.includes(kw))) {
+            category = 'window';
+            reason = 'name match (window keywords)';
+          } else if (taillightKeywords.some(kw => name.includes(kw))) {
+            category = 'taillight';
+            reason = 'name match (taillight keywords)';
+          } else if (headlightKeywords.some(kw => name.includes(kw)) || lightKeywords.some(kw => name.includes(kw))) {
+            category = 'light';
+            reason = 'name match (light keywords)';
+          } else if (bodyKeywords.some(kw => name.includes(kw))) {
+            category = 'body';
+            reason = 'name match (body keywords)';
+          }
+          // 2. Material-based detection (if name doesn't match)
+          else if (material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial) {
+            // Transparent = window
+            if (material.transparent && material.opacity < 0.9) {
+              category = 'window';
+              reason = 'transparent material';
             }
-            else if (material && (material instanceof THREE.MeshStandardMaterial)) {
-              if (material.transparent && material.opacity < 0.9) category = 'window';
-              else if (material.emissive && material.emissiveIntensity && material.emissiveIntensity > 0) {
-                 if (volume < maxVolume * 0.5) category = 'light';
+            // Emissive = light (only small parts)
+            else if (material.emissive && (material.emissive.r > 0 || material.emissive.g > 0 || material.emissive.b > 0)) {
+              if (volumeRatio < 0.05) {
+                category = 'light';
+                reason = 'emissive material + small size';
               }
             }
-            else {
-              if (volume < maxVolume * 0.01) category = 'light';
-              else if (volume < maxVolume * 0.1 && minDim / maxDim > 0.3) {
-                const isAtCorner = Math.abs(worldPos.x) > 0.3 || Math.abs(worldPos.z) > 0.3;
-                if (isAtCorner) category = 'rim';
-              }
-            }
+          }
+          
+          // 3. Very large parts are always body (override)
+          if (volumeRatio > 0.3 && category !== 'window') {
+            category = 'body';
+            reason = 'large volume (body override)';
+          }
 
-            if (volume > maxVolume * 0.5 && category !== 'window') category = 'body';
+          // Log the categorization
+          console.log(`  ${mesh.name || '(unnamed)'} -> ${category.toUpperCase()} (${reason}, vol: ${(volumeRatio * 100).toFixed(1)}%)`);
 
-            switch (category) {
-              case 'rim': rims.push(mesh); break;
-              case 'window': windows.push(mesh); break;
-              case 'light': lights.push(mesh); break;
-              default: body.push(mesh); break;
-            }
-          });
-        }
+          switch (category) {
+            case 'rim': rims.push(mesh); break;
+            case 'window': windows.push(mesh); break;
+            case 'light': lights.push(mesh); break;
+            case 'taillight': taillights.push(mesh); break;
+            default: body.push(mesh); break;
+          }
+        });
       }
-      setCarParts({ body, rims, windows, lights });
+
+      console.log('=== DETECTION SUMMARY ===');
+      console.log(`  Body parts: ${body.length}`);
+      console.log(`  Rim parts: ${rims.length}`);
+      console.log(`  Window parts: ${windows.length}`);
+      console.log(`  Headlight parts: ${lights.length}`);
+      console.log(`  Taillight parts: ${taillights.length}`);
+
+      setCarParts({ body, rims, windows, lights, taillights });
       onModelLoad?.();
     }
   }, [scene, onModelLoad]);
 
   // --- 2. Material Application ---
   useEffect(() => {
-    const applyOrReset = (meshes: THREE.Mesh[], color: string | undefined, params: any = {}) => {
-      meshes.forEach(mesh => {
-        if (color && mesh.material) {
-            const originalMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-            const newMat = originalMat.clone() as THREE.MeshStandardMaterial;
-            newMat.color = new THREE.Color(color);
-            Object.assign(newMat, params);
-            mesh.material = newMat;
-        } else {
-            const orig = originalMaterials.current.get(mesh.uuid);
-            if (orig) mesh.material = orig;
+    // Helper to safely set color on a material
+    const setMaterialColor = (mesh: THREE.Mesh, color: string, extraParams?: any) => {
+      if (!mesh.material) return;
+      
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach((mat) => {
+        if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+          mat.color.set(color);
+          if (extraParams?.metalness !== undefined) mat.metalness = extraParams.metalness;
+          if (extraParams?.roughness !== undefined) mat.roughness = extraParams.roughness;
+          if (extraParams?.emissive) mat.emissive.set(extraParams.emissive);
+          if (extraParams?.emissiveIntensity !== undefined) mat.emissiveIntensity = extraParams.emissiveIntensity;
+          mat.needsUpdate = true;
+        } else if ((mat as any).color) {
+          // Fallback for other material types with a color property
+          (mat as any).color.set(color);
+          mat.needsUpdate = true;
         }
       });
     };
 
+    // Helper to reset material to original
+    const resetMaterial = (mesh: THREE.Mesh) => {
+      const orig = originalMaterials.current.get(mesh.uuid);
+      if (orig) {
+        mesh.material = orig;
+      }
+    };
+
     if (debugMode) {
-        carParts.body.forEach(m => (m.material as any).color.set('#ff5e1a'));
-        carParts.rims.forEach(m => (m.material as any).color.set('#00ffff'));
-        carParts.windows.forEach(m => (m.material as any).color.set('#ffff00'));
-        carParts.lights.forEach(m => (m.material as any).color.set('#ff00ff'));
+      // Debug mode: color-code parts
+      carParts.body.forEach(m => setMaterialColor(m, '#ff5e1a'));      // Orange
+      carParts.rims.forEach(m => setMaterialColor(m, '#00ffff'));      // Cyan
+      carParts.windows.forEach(m => setMaterialColor(m, '#ffff00'));   // Yellow
+      carParts.lights.forEach(m => setMaterialColor(m, '#ff00ff'));    // Magenta
+      carParts.taillights.forEach(m => setMaterialColor(m, '#ff0000')); // Red
     } else {
-      applyOrReset(carParts.body, bodyColor, { metalness, roughness });
-      applyOrReset(carParts.rims, rimColor, { metalness: 0.9, roughness: 0.1 });
+      // Normal mode: apply user customizations or reset to original
       
-      carParts.windows.forEach(mesh => {
-         if (windowTint > 0) {
-            const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material).clone() as THREE.MeshStandardMaterial;
-            mat.transparent = true;
-            mat.opacity = 1 - windowTint;
-            mat.color = new THREE.Color('#000000');
-            mat.metalness = 0.5;
-            mat.roughness = 0.2;
-            mesh.material = mat;
-         } else {
-             const orig = originalMaterials.current.get(mesh.uuid);
-             if (orig) mesh.material = orig;
-         }
+      // Get wrap properties
+      const getWrapProperties = () => {
+        switch (wrapType) {
+          case 'Matte Black':
+            return { color: '#111111', metalness: 0, roughness: 1 };
+          case 'Chrome':
+            return { color: '#cccccc', metalness: 1, roughness: 0 };
+          case 'Carbon Fiber':
+            return { color: '#222222', metalness: 0.6, roughness: 0.3 };
+          case 'Camo':
+            return { color: '#4a5d23', metalness: 0.2, roughness: 0.8 };
+          case 'Gloss Red':
+            return { color: '#cc0000', metalness: 0.8, roughness: 0.1 };
+          default:
+            return null;
+        }
+      };
+
+      const wrapProps = getWrapProperties();
+      
+      // Body color (with wrap support)
+      carParts.body.forEach(mesh => {
+        if (wrapProps) {
+          // Wrap takes priority
+          setMaterialColor(mesh, wrapProps.color, { 
+            metalness: wrapProps.metalness, 
+            roughness: wrapProps.roughness 
+          });
+        } else if (bodyColor) {
+          setMaterialColor(mesh, bodyColor, { metalness, roughness });
+        } else {
+          resetMaterial(mesh);
+        }
       });
 
-      applyOrReset(carParts.lights, headlightColor, { emissive: new THREE.Color(headlightColor), emissiveIntensity: 0.5 });
+      // Rim color  
+      carParts.rims.forEach(mesh => {
+        if (rimColor) {
+          setMaterialColor(mesh, rimColor, { metalness: 0.9, roughness: 0.1 });
+        } else {
+          resetMaterial(mesh);
+        }
+      });
+      
+      // Window tint
+      carParts.windows.forEach(mesh => {
+        if (windowTint > 0) {
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          materials.forEach((mat) => {
+            if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+              mat.transparent = true;
+              mat.opacity = 1 - windowTint;
+              mat.color.set('#1a1a1a');
+              mat.needsUpdate = true;
+            }
+          });
+        } else {
+          resetMaterial(mesh);
+        }
+      });
+
+      // Headlight color
+      carParts.lights.forEach(mesh => {
+        if (headlightColor) {
+          setMaterialColor(mesh, headlightColor, { 
+            emissive: headlightColor, 
+            emissiveIntensity: 0.8 
+          });
+        } else {
+          resetMaterial(mesh);
+        }
+      });
+
+      // Taillight color
+      carParts.taillights.forEach(mesh => {
+        if (taillightColor) {
+          setMaterialColor(mesh, taillightColor, { 
+            emissive: taillightColor, 
+            emissiveIntensity: 1.0 
+          });
+        } else {
+          resetMaterial(mesh);
+        }
+      });
     }
-  }, [carParts, bodyColor, rimColor, windowTint, metalness, roughness, headlightColor, debugMode]);
+  }, [carParts, bodyColor, rimColor, windowTint, metalness, roughness, headlightColor, taillightColor, wrapType, debugMode]);
 
   // --- 3. Click Handler ---
   const handleGroupClick = (e: ThreeEvent<MouseEvent>) => {
@@ -219,7 +356,7 @@ export function CarModel({
                 castShadow
              />
         )}
-        {showSpoiler && <Spoiler />}
+        {showSpoiler && <Spoiler style={spoilerStyle} color={spoilerColor || bodyColor} />}
         {decalUrl && carParts.body.length > 0 && (
           <CarDecal targetMesh={carParts.body[0]} decalUrl={decalUrl} />
         )}
@@ -237,12 +374,77 @@ function CarDecal({ targetMesh, decalUrl }: { targetMesh: THREE.Mesh; decalUrl: 
   );
 }
 
-function Spoiler() {
-    return (
-        <group position={[0, 0.7, -2.1]}>
-            <mesh position={[0, 0.2, 0]}><boxGeometry args={[1.6, 0.05, 0.3]} /><meshStandardMaterial color="#111" /></mesh>
-            <mesh position={[-0.5, 0, 0]}><boxGeometry args={[0.05, 0.3, 0.1]} /><meshStandardMaterial color="#111" /></mesh>
-            <mesh position={[0.5, 0, 0]}><boxGeometry args={[0.05, 0.3, 0.1]} /><meshStandardMaterial color="#111" /></mesh>
+function Spoiler({ style = 'wing', color = '#111111' }: { style?: string; color?: string }) {
+    const spoilerColor = color || '#111111';
+    
+    // Different spoiler styles
+    if (style === 'ducktail') {
+      return (
+        <group position={[0, 0.6, -2.1]}>
+          <mesh rotation={[0.3, 0, 0]}>
+            <boxGeometry args={[1.5, 0.03, 0.4]} />
+            <meshStandardMaterial color={spoilerColor} metalness={0.5} roughness={0.3} />
+          </mesh>
         </group>
+      );
+    }
+    
+    if (style === 'lip') {
+      return (
+        <group position={[0, 0.55, -2.2]}>
+          <mesh>
+            <boxGeometry args={[1.4, 0.04, 0.15]} />
+            <meshStandardMaterial color={spoilerColor} metalness={0.6} roughness={0.2} />
+          </mesh>
+        </group>
+      );
+    }
+    
+    if (style === 'gt') {
+      return (
+        <group position={[0, 0.8, -2.0]}>
+          {/* Large GT wing */}
+          <mesh position={[0, 0.35, 0]}>
+            <boxGeometry args={[1.8, 0.06, 0.35]} />
+            <meshStandardMaterial color={spoilerColor} metalness={0.7} roughness={0.2} />
+          </mesh>
+          {/* Tall stands */}
+          <mesh position={[-0.6, 0, 0]}>
+            <boxGeometry args={[0.06, 0.5, 0.1]} />
+            <meshStandardMaterial color={spoilerColor} metalness={0.7} roughness={0.2} />
+          </mesh>
+          <mesh position={[0.6, 0, 0]}>
+            <boxGeometry args={[0.06, 0.5, 0.1]} />
+            <meshStandardMaterial color={spoilerColor} metalness={0.7} roughness={0.2} />
+          </mesh>
+          {/* End plates */}
+          <mesh position={[-0.9, 0.35, 0]}>
+            <boxGeometry args={[0.02, 0.2, 0.4]} />
+            <meshStandardMaterial color={spoilerColor} metalness={0.7} roughness={0.2} />
+          </mesh>
+          <mesh position={[0.9, 0.35, 0]}>
+            <boxGeometry args={[0.02, 0.2, 0.4]} />
+            <meshStandardMaterial color={spoilerColor} metalness={0.7} roughness={0.2} />
+          </mesh>
+        </group>
+      );
+    }
+    
+    // Default: Wing style
+    return (
+      <group position={[0, 0.7, -2.1]}>
+        <mesh position={[0, 0.2, 0]}>
+          <boxGeometry args={[1.6, 0.05, 0.3]} />
+          <meshStandardMaterial color={spoilerColor} metalness={0.5} roughness={0.3} />
+        </mesh>
+        <mesh position={[-0.5, 0, 0]}>
+          <boxGeometry args={[0.05, 0.3, 0.1]} />
+          <meshStandardMaterial color={spoilerColor} metalness={0.5} roughness={0.3} />
+        </mesh>
+        <mesh position={[0.5, 0, 0]}>
+          <boxGeometry args={[0.05, 0.3, 0.1]} />
+          <meshStandardMaterial color={spoilerColor} metalness={0.5} roughness={0.3} />
+        </mesh>
+      </group>
     );
 }

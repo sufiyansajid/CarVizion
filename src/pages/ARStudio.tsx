@@ -60,7 +60,9 @@ const ARStudio = () => {
   const [underglowColor, setUnderglowColor] = useState<string | undefined>(undefined);
   const [underglowIntensity, setUnderglowIntensity] = useState(0);
   const [headlightColor, setHeadlightColor] = useState<string | undefined>(undefined);
+  const [taillightColor, setTaillightColor] = useState<string | undefined>(undefined);
   const [showSpoiler, setShowSpoiler] = useState(false);
+  const [spoilerStyle, setSpoilerStyle] = useState<string>("wing");
   const [decalUrl, setDecalUrl] = useState<string | null>(null);
   const [wrapType, setWrapType] = useState<string | null>(null);
 
@@ -200,6 +202,10 @@ const ARStudio = () => {
                               underglowColor={underglowColor}
                               underglowIntensity={underglowIntensity}
                               headlightColor={headlightColor}
+                              taillightColor={taillightColor}
+                              wrapType={wrapType || undefined}
+                              spoilerStyle={spoilerStyle}
+                              spoilerColor={bodyColor}
                               debugMode={debugMode}
                               showSpoiler={showSpoiler}
                               decalUrl={decalUrl || undefined}
@@ -308,10 +314,102 @@ const ARStudio = () => {
                       <Card className="bg-card/80 border-border mb-3">
                           <CardContent className="grid grid-cols-2 gap-2 mt-4">
                              {lightOptions.map(l => (
-                                 <Button key={l} size="sm" variant="outline" 
+                                 <Button key={l} size="sm" variant={headlightColor === (l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff") ? "default" : "outline"} 
                                     onClick={() => setHeadlightColor(l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff")}
                                  >{l}</Button>
                              ))}
+                          </CardContent>
+                      </Card>
+                  )}
+                  {/* Taillights Panel */}
+                  {tool.id === "taillights" && (
+                      <Card className="bg-card/80 border-border mb-3">
+                          <CardHeader className="pb-2"><CardTitle className="text-sm">Taillight Colors</CardTitle></CardHeader>
+                          <CardContent className="grid grid-cols-4 gap-2">
+                             {["#ff0000", "#ff3300", "#cc0000", "#ff6600", "#990000", "#ffffff", "#ff00ff", "#ffff00"].map((c, i) => (
+                                 <button key={i} style={{backgroundColor: c}} 
+                                     className={cn("w-8 h-8 rounded border", taillightColor === c && "ring-2 ring-primary")}
+                                     onClick={() => setTaillightColor(c)} 
+                                 />
+                             ))}
+                          </CardContent>
+                      </Card>
+                  )}
+                  {/* Spoilers Panel */}
+                  {tool.id === "spoilers" && (
+                      <Card className="bg-card/80 border-border mb-3">
+                          <CardContent className="space-y-3 mt-4">
+                             <div className="flex items-center justify-between">
+                               <span className="text-sm">Show Spoiler</span>
+                               <Button size="sm" variant={showSpoiler ? "default" : "outline"} onClick={() => setShowSpoiler(!showSpoiler)}>
+                                 {showSpoiler ? "ON" : "OFF"}
+                               </Button>
+                             </div>
+                             {showSpoiler && (
+                               <div className="grid grid-cols-2 gap-2 pt-2">
+                                 {["Wing", "Ducktail", "Lip", "GT"].map(s => (
+                                   <Button key={s} size="sm" variant={spoilerStyle === s.toLowerCase() ? "default" : "secondary"} onClick={() => setSpoilerStyle(s.toLowerCase())}>{s}</Button>
+                                 ))}
+                               </div>
+                             )}
+                          </CardContent>
+                      </Card>
+                  )}
+                  {/* Underglow Panel */}
+                  {tool.id === "underglow" && (
+                      <Card className="bg-card/80 border-border mb-3">
+                          <CardHeader className="pb-2"><CardTitle className="text-sm">Underglow</CardTitle></CardHeader>
+                          <CardContent className="space-y-3">
+                             <div className="grid grid-cols-4 gap-2">
+                               {["#ff0000", "#00ff00", "#0000ff", "#ff00ff", "#00ffff", "#ffff00", "#ff6600", "#ffffff"].map((c, i) => (
+                                   <button key={i} style={{backgroundColor: c}} 
+                                       className={cn("w-8 h-8 rounded border", underglowColor === c && "ring-2 ring-primary")}
+                                       onClick={() => { setUnderglowColor(c); setUnderglowIntensity(1); }} 
+                                   />
+                               ))}
+                             </div>
+                             <div className="flex items-center gap-2">
+                               <span className="text-xs">Intensity</span>
+                               <input type="range" min="0" max="2" step="0.1" value={underglowIntensity} 
+                                 onChange={(e) => setUnderglowIntensity(parseFloat(e.target.value))} 
+                                 className="flex-1 h-2 bg-secondary rounded-lg cursor-pointer"
+                               />
+                             </div>
+                          </CardContent>
+                      </Card>
+                  )}
+                  {/* Decals Panel */}
+                  {tool.id === "decals" && (
+                      <Card className="bg-card/80 border-border mb-3">
+                          <CardContent className="space-y-3 mt-4">
+                             <p className="text-xs text-muted-foreground">Select preset decals:</p>
+                             <div className="grid grid-cols-2 gap-2">
+                               {["Flames", "Stripes", "Racing", "Logo"].map(d => (
+                                 <Button key={d} size="sm" variant={decalUrl?.includes(d.toLowerCase()) ? "default" : "secondary"} 
+                                   onClick={() => setDecalUrl(`/decals/${d.toLowerCase()}.png`)}>
+                                   {d}
+                                 </Button>
+                               ))}
+                             </div>
+                             <Button size="sm" variant="outline" className="w-full" onClick={() => setDecalUrl(null)}>Clear Decal</Button>
+                          </CardContent>
+                      </Card>
+                  )}
+                  {/* Bumpers - Coming Soon */}
+                  {tool.id === "bumpers" && (
+                      <Card className="bg-card/80 border-border mb-3">
+                          <CardContent className="py-6 text-center text-muted-foreground">
+                            <p className="text-sm">🚧 Coming Soon</p>
+                            <p className="text-xs mt-1">Requires custom 3D models</p>
+                          </CardContent>
+                      </Card>
+                  )}
+                  {/* Side Skirts - Coming Soon */}
+                  {tool.id === "sideskirts" && (
+                      <Card className="bg-card/80 border-border mb-3">
+                          <CardContent className="py-6 text-center text-muted-foreground">
+                            <p className="text-sm">🚧 Coming Soon</p>
+                            <p className="text-xs mt-1">Requires custom 3D models</p>
                           </CardContent>
                       </Card>
                   )}
