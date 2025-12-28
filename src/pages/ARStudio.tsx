@@ -1,14 +1,12 @@
-import React, { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+// Unused: Input import removed
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { designApi } from "@/store/designStore";
-import api from "@/store/baseApi";
+// Unused: designApi, api imports removed
 import {
   Camera,
-  Upload,
   Palette,
   Settings,
   Sticker,
@@ -19,10 +17,6 @@ import {
   PanelsTopLeft,
   PaintBucket,
   Save,
-  Undo2,
-  Redo2,
-  Play,
-  Square,
   SlidersHorizontal,
   Box,
   Video,
@@ -45,20 +39,19 @@ import { Car } from "lucide-react";
 const ARStudio = () => {
   const [activeTab, setActiveTab] = useState("3d");
   const [selectedTool, setSelectedTool] = useState("");
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState(CAR_MODELS[0]);
-  
+
   // 3D Model View State
   const [debugMode, setDebugMode] = useState(false);
-  
+
   // Customization States (Shared)
   const [bodyColor, setBodyColor] = useState<string | undefined>(undefined);
   const [rimColor, setRimColor] = useState<string | undefined>(undefined);
   const [windowTint, setWindowTint] = useState<number>(0);
-  const [metalness, setMetalness] = useState(0.8);
-  const [roughness, setRoughness] = useState(0.2);
-  const [underglowColor, setUnderglowColor] = useState<string | undefined>(undefined);
-  const [underglowIntensity, setUnderglowIntensity] = useState(0);
+  const metalness = 0.8;
+  const roughness = 0.2;
+  const underglowColor = undefined;
+  const underglowIntensity = 0;
   const [headlightColor, setHeadlightColor] = useState<string | undefined>(undefined);
   const [taillightColor, setTaillightColor] = useState<string | undefined>(undefined);
   const [showSpoiler, setShowSpoiler] = useState(false);
@@ -83,10 +76,10 @@ const ARStudio = () => {
   // --- INTERACTION HANDLER ---
   const handlePartSelect = (partId: string) => {
     if (selectedTool !== partId) {
-        setSelectedTool(partId);
-        // Helper to get tool name for Toast
-        const toolName = customizationTools.find(t => t.id === partId)?.name || partId;
-        toast.info(`Editing ${toolName}`, { duration: 1500 });
+      setSelectedTool(partId);
+      // Helper to get tool name for Toast
+      const toolName = customizationTools.find(t => t.id === partId)?.name || partId;
+      toast.info(`Editing ${toolName}`, { duration: 1500 });
     }
   };
 
@@ -117,27 +110,27 @@ const ARStudio = () => {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                  CarVizion Studio
+                CarVizion Studio
               </CardTitle>
               <div className="flex gap-2">
-                
+
                 {activeTab === "3d" && (
-                    <Button 
-                      variant={debugMode ? "default" : "outline"} 
-                      size="sm"
-                      onClick={() => setDebugMode(!debugMode)}
-                      title="Debug mode: Color-code parts"
-                    >
-                      <SlidersHorizontal className="w-4 h-4 mr-2" /> 
-                      {debugMode ? "Debug ON" : "Debug OFF"}
-                    </Button>
+                  <Button
+                    variant={debugMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setDebugMode(!debugMode)}
+                    title="Debug mode: Color-code parts"
+                  >
+                    <SlidersHorizontal className="w-4 h-4 mr-2" />
+                    {debugMode ? "Debug ON" : "Debug OFF"}
+                  </Button>
                 )}
 
                 {/* Car Selection */}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
-                       <Car className="w-4 h-4 mr-2" /> Garage
+                      <Car className="w-4 h-4 mr-2" /> Garage
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl">
@@ -145,30 +138,30 @@ const ARStudio = () => {
                       <DialogTitle>Select Vehicle</DialogTitle>
                     </DialogHeader>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                        {CAR_MODELS.map((car: any) => (
-                           <div 
-                              key={car.id} 
-                              className={cn(
-                                "cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent",
-                                selectedModel.id === car.id ? "border-primary bg-accent/50" : "border-muted"
-                              )}
-                              onClick={() => {
-                                setSelectedModel(car);
-                                toast.success(`Switched to ${car.name}`);
-                              }}
-                           >
-                              <div className="aspect-video rounded-lg bg-muted mb-3 flex items-center justify-center">
-                                 <Car className="w-12 h-12 text-muted-foreground" />
-                              </div>
-                              <h3 className="font-bold">{car.name}</h3>
-                              <p className="text-sm text-muted-foreground">{car.description}</p>
-                           </div>
-                        ))}
+                      {CAR_MODELS.map((car: any) => (
+                        <div
+                          key={car.id}
+                          className={cn(
+                            "cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent",
+                            selectedModel.id === car.id ? "border-primary bg-accent/50" : "border-muted"
+                          )}
+                          onClick={() => {
+                            setSelectedModel(car);
+                            toast.success(`Switched to ${car.name}`);
+                          }}
+                        >
+                          <div className="aspect-video rounded-lg bg-muted mb-3 flex items-center justify-center">
+                            <Car className="w-12 h-12 text-muted-foreground" />
+                          </div>
+                          <h3 className="font-bold">{car.name}</h3>
+                          <p className="text-sm text-muted-foreground">{car.description}</p>
+                        </div>
+                      ))}
                     </div>
                   </DialogContent>
                 </Dialog>
                 <Button variant="default" onClick={() => toast.success("Feature coming soon")}>
-                   <Save className="w-4 h-4 mr-2" /> Save Design
+                  <Save className="w-4 h-4 mr-2" /> Save Design
                 </Button>
               </div>
             </div>
@@ -177,17 +170,38 @@ const ARStudio = () => {
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
+
         {/* Main Content Area (Tabs) */}
         <div className="lg:col-span-3 order-2 lg:order-1">
-             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                <div className="mb-4 flex items-center justify-center bg-card/80 p-2 rounded-lg border w-fit mx-auto">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="3d"><Box className="w-4 h-4 mr-2"/> 3D Studio</TabsTrigger>
-                        <TabsTrigger value="2d"><Camera className="w-4 h-4 mr-2"/> 2D AI</TabsTrigger>
-                        <TabsTrigger value="video"><Video className="w-4 h-4 mr-2"/> AR Video</TabsTrigger>
-                    </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            <div className="mb-4 flex items-center justify-center bg-card/80 p-2 rounded-lg border w-fit mx-auto">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="3d"><Box className="w-4 h-4 mr-2" /> 3D Studio</TabsTrigger>
+                <TabsTrigger value="2d"><Camera className="w-4 h-4 mr-2" /> 2D AI</TabsTrigger>
+                <TabsTrigger value="video"><Video className="w-4 h-4 mr-2" /> AR Video</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <div className="flex-1 bg-card/80 backdrop-blur-sm border-primary/20 rounded-xl p-4 md:p-6 min-h-[600px]">
+              <TabsContent value="3d" className="h-full mt-0">
+                <div className="relative h-full rounded-lg overflow-hidden bg-secondary/20 flex items-center justify-center">
+                  <CarModel3D
+                    modelPath={selectedModel.path}
+                    bodyColor={bodyColor}
+                    rimColor={rimColor}
+                    windowTint={windowTint}
+                    metalness={metalness}
+                    roughness={roughness}
+                    underglowColor={underglowColor}
+                    underglowIntensity={underglowIntensity}
+                    headlightColor={headlightColor}
+                    debugMode={debugMode}
+                    showSpoiler={showSpoiler}
+                    decalUrl={decalUrl || undefined}
+                    onPartSelect={handlePartSelect}
+                  />
                 </div>
+              </TabsContent>
 
                 <div className="flex-1 bg-card/80 backdrop-blur-sm border-primary/20 rounded-xl p-4 md:p-6 min-h-[600px]">
                     <TabsContent value="3d" className="h-full mt-0">
@@ -213,33 +227,32 @@ const ARStudio = () => {
                             />
                          </div>
                     </TabsContent>
+              <TabsContent value="2d" className="h-full mt-0">
+                <TwoDStudio
+                  selectedTool={selectedTool}
+                  toolValue={getCurrentToolValue()}
+                  toolName={customizationTools.find(t => t.id === selectedTool)?.name}
+                />
+              </TabsContent>
 
-                    <TabsContent value="2d" className="h-full mt-0">
-                        <TwoDStudio 
-                            selectedTool={selectedTool} 
-                            toolValue={getCurrentToolValue()} 
-                            toolName={customizationTools.find(t => t.id === selectedTool)?.name}
-                        />
-                    </TabsContent>
-
-                    <TabsContent value="video" className="h-full mt-0">
-                        <VideoStudio />
-                    </TabsContent>
-                </div>
-             </Tabs>
+              <TabsContent value="video" className="h-full mt-0">
+                <VideoStudio selectedTool={selectedTool} />
+              </TabsContent>
+            </div>
+          </Tabs>
         </div>
 
         {/* Sidebar Tools (Shared across tabs) */}
         <div className="space-y-3 order-1 lg:order-2 sticky top-4 overflow-y-auto max-h-[80vh]">
           <Card className="bg-card/90 mb-4 border-l-4 border-l-primary">
-              <CardContent className="p-4">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Current Mode</p>
-                  <h3 className="text-lg font-bold flex items-center">
-                      {activeTab === "3d" ? <><Box className="w-4 h-4 mr-2 text-primary"/> 3D Interactive</> : 
-                       activeTab === "2d" ? <><Camera className="w-4 h-4 mr-2 text-blue-500"/> 2D AI Gen</> : 
-                       <><Video className="w-4 h-4 mr-2 text-red-500"/> AR Video</>}
-                  </h3>
-              </CardContent>
+            <CardContent className="p-4">
+              <p className="text-sm font-medium text-muted-foreground mb-1">Current Mode</p>
+              <h3 className="text-lg font-bold flex items-center">
+                {activeTab === "3d" ? <><Box className="w-4 h-4 mr-2 text-primary" /> 3D Interactive</> :
+                  activeTab === "2d" ? <><Camera className="w-4 h-4 mr-2 text-blue-500" /> 2D AI Gen</> :
+                    <><Video className="w-4 h-4 mr-2 text-red-500" /> AR Video</>}
+              </h3>
+            </CardContent>
           </Card>
 
           {customizationTools.map((tool) => (
@@ -262,52 +275,52 @@ const ARStudio = () => {
                   {/* Paint Panel */}
                   {tool.id === "paint" && (
                     <Card className="bg-card/80 border-border mb-3">
-                        <CardHeader className="pb-2"><CardTitle className="text-sm">Body Paint</CardTitle></CardHeader>
-                        <CardContent className="grid grid-cols-4 gap-2">
-                            {colorOptions.map((c, i) => (
-                                <button key={i} style={{backgroundColor: c}} 
-                                    className={cn("w-8 h-8 rounded border", bodyColor === c && "ring-2 ring-primary")}
-                                    onClick={() => setBodyColor(c)} 
-                                />
-                            ))}
-                        </CardContent>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm">Body Paint</CardTitle></CardHeader>
+                      <CardContent className="grid grid-cols-4 gap-2">
+                        {colorOptions.map((c, i) => (
+                          <button key={i} style={{ backgroundColor: c }}
+                            className={cn("w-8 h-8 rounded border", bodyColor === c && "ring-2 ring-primary")}
+                            onClick={() => setBodyColor(c)}
+                          />
+                        ))}
+                      </CardContent>
                     </Card>
                   )}
                   {/* Wraps Panel */}
                   {tool.id === "wraps" && (
                     <Card className="bg-card/80 border-border mb-3">
-                        <CardContent className="grid grid-cols-2 gap-2 mt-4">
-                            {wrapOptions.map((w, i) => (
-                                <Button key={i} variant={wrapType === w ? "default" : "secondary"} size="sm" onClick={() => setWrapType(w)}>
-                                    {w}
-                                </Button>
-                            ))}
-                        </CardContent>
+                      <CardContent className="grid grid-cols-2 gap-2 mt-4">
+                        {wrapOptions.map((w, i) => (
+                          <Button key={i} variant={wrapType === w ? "default" : "secondary"} size="sm" onClick={() => setWrapType(w)}>
+                            {w}
+                          </Button>
+                        ))}
+                      </CardContent>
                     </Card>
                   )}
                   {/* Rims Panel */}
                   {tool.id === "rims" && (
                     <Card className="bg-card/80 border-border mb-3">
-                         <CardHeader className="pb-2"><CardTitle className="text-sm">Rim Colors</CardTitle></CardHeader>
-                         <CardContent className="grid grid-cols-4 gap-2">
-                            {colorOptions.map((c, i) => (
-                                <button key={i} style={{backgroundColor: c}} 
-                                    className={cn("w-8 h-8 rounded border", rimColor === c && "ring-2 ring-primary")}
-                                    onClick={() => setRimColor(c)} 
-                                />
-                            ))}
-                        </CardContent>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm">Rim Colors</CardTitle></CardHeader>
+                      <CardContent className="grid grid-cols-4 gap-2">
+                        {colorOptions.map((c, i) => (
+                          <button key={i} style={{ backgroundColor: c }}
+                            className={cn("w-8 h-8 rounded border", rimColor === c && "ring-2 ring-primary")}
+                            onClick={() => setRimColor(c)}
+                          />
+                        ))}
+                      </CardContent>
                     </Card>
                   )}
                   {/* Window Tint Panel */}
                   {tool.id === "windowtint" && (
-                     <Card className="bg-card/80 border-border mb-3">
-                         <CardContent className="grid grid-cols-2 gap-2 mt-4">
-                            {tintOptions.map((t, idx) => (
-                                <Button key={t} size="sm" variant={windowTint === idx * 0.25 ? "default" : "outline"} onClick={() => setWindowTint(idx * 0.25)}>{t}</Button>
-                            ))}
-                         </CardContent>
-                     </Card>
+                    <Card className="bg-card/80 border-border mb-3">
+                      <CardContent className="grid grid-cols-2 gap-2 mt-4">
+                        {tintOptions.map((t, idx) => (
+                          <Button key={t} size="sm" variant={windowTint === idx * 0.25 ? "default" : "outline"} onClick={() => setWindowTint(idx * 0.25)}>{t}</Button>
+                        ))}
+                      </CardContent>
+                    </Card>
                   )}
                   {/* Headlights Panel */}
                   {tool.id === "headlights" && (
@@ -320,6 +333,15 @@ const ARStudio = () => {
                              ))}
                           </CardContent>
                       </Card>
+                    <Card className="bg-card/80 border-border mb-3">
+                      <CardContent className="grid grid-cols-2 gap-2 mt-4">
+                        {lightOptions.map(l => (
+                          <Button key={l} size="sm" variant="outline"
+                            onClick={() => setHeadlightColor(l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff")}
+                          >{l}</Button>
+                        ))}
+                      </CardContent>
+                    </Card>
                   )}
                   {/* Taillights Panel */}
                   {tool.id === "taillights" && (
