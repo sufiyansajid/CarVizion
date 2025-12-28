@@ -50,8 +50,8 @@ const ARStudio = () => {
   const [windowTint, setWindowTint] = useState<number>(0);
   const metalness = 0.8;
   const roughness = 0.2;
-  const underglowColor = undefined;
-  const underglowIntensity = 0;
+  const [underglowColor, setUnderglowColor] = useState<string | undefined>(undefined);
+  const [underglowIntensity, setUnderglowIntensity] = useState<number>(0);
   const [headlightColor, setHeadlightColor] = useState<string | undefined>(undefined);
   const [taillightColor, setTaillightColor] = useState<string | undefined>(undefined);
   const [showSpoiler, setShowSpoiler] = useState(false);
@@ -203,30 +203,6 @@ const ARStudio = () => {
                 </div>
               </TabsContent>
 
-                <div className="flex-1 bg-card/80 backdrop-blur-sm border-primary/20 rounded-xl p-4 md:p-6 min-h-[600px]">
-                    <TabsContent value="3d" className="h-full mt-0">
-                         <div className="relative h-full rounded-lg overflow-hidden bg-secondary/20 flex items-center justify-center">
-                            <CarModel3D
-                              modelPath={selectedModel.path}
-                              bodyColor={bodyColor}
-                              rimColor={rimColor}
-                              windowTint={windowTint}
-                              metalness={metalness}
-                              roughness={roughness}
-                              underglowColor={underglowColor}
-                              underglowIntensity={underglowIntensity}
-                              headlightColor={headlightColor}
-                              taillightColor={taillightColor}
-                              wrapType={wrapType || undefined}
-                              spoilerStyle={spoilerStyle}
-                              spoilerColor={bodyColor}
-                              debugMode={debugMode}
-                              showSpoiler={showSpoiler}
-                              decalUrl={decalUrl || undefined}
-                              onPartSelect={handlePartSelect}
-                            />
-                         </div>
-                    </TabsContent>
               <TabsContent value="2d" className="h-full mt-0">
                 <TwoDStudio
                   selectedTool={selectedTool}
@@ -333,15 +309,7 @@ const ARStudio = () => {
                              ))}
                           </CardContent>
                       </Card>
-                    <Card className="bg-card/80 border-border mb-3">
-                      <CardContent className="grid grid-cols-2 gap-2 mt-4">
-                        {lightOptions.map(l => (
-                          <Button key={l} size="sm" variant="outline"
-                            onClick={() => setHeadlightColor(l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff")}
-                          >{l}</Button>
-                        ))}
-                      </CardContent>
-                    </Card>
+
                   )}
                   {/* Taillights Panel */}
                   {tool.id === "taillights" && (

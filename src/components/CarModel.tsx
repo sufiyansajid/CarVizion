@@ -124,10 +124,15 @@ export function CarModel({
             
             if (!bbox) { body.push(mesh); return; }
 
-          const size = new THREE.Vector3();
-          bbox.getSize(size);
-          const volume = size.x * size.y * size.z;
-          const volumeRatio = volume / maxVolume;
+            const size = new THREE.Vector3();
+            bbox.getSize(size);
+            const volume = size.x * size.y * size.z;
+            const minDim = Math.min(size.x, size.y, size.z);
+            const maxDim = Math.max(size.x, size.y, size.z);
+            
+            // Get world position for corner detection
+            const worldPos = new THREE.Vector3();
+            mesh.getWorldPosition(worldPos);
 
             let category = 'body';
 
@@ -152,14 +157,15 @@ export function CarModel({
 
             if (volume > maxVolume * 0.5 && category !== 'window') category = 'body';
 
-          switch (category) {
-            case 'rim': rims.push(mesh); break;
-            case 'window': windows.push(mesh); break;
-            case 'light': lights.push(mesh); break;
-            case 'taillight': taillights.push(mesh); break;
-            default: body.push(mesh); break;
-          }
-        });
+            switch (category) {
+              case 'rim': rims.push(mesh); break;
+              case 'window': windows.push(mesh); break;
+              case 'light': lights.push(mesh); break;
+              case 'taillight': taillights.push(mesh); break;
+              default: body.push(mesh); break;
+            }
+          });
+        }
       }
 
       console.log('=== DETECTION SUMMARY ===');
