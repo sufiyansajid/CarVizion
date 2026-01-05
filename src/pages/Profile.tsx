@@ -16,7 +16,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  User,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  User as UserIcon,
   Settings,
   LogOut,
   Upload,
@@ -37,26 +48,15 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { designApi, type DesignData } from "@/store/designStore";
 import api from "@/store/baseApi";
+import { getAvatarUrl, getImageUrl } from "@/lib/imageUtils";
+import type { User } from "@/types/user";
+import type { Design } from "@/store/designStore";
+import OptimizedImage from "@/components/OptimizedImage";
 
 const Profile = () => {
-  const toImageUrl = (url?: string) => {
-    if (!url) return url as any;
-    if (url.startsWith("/uploads")) {
-      // Ensure absolute URL to backend for static files
-      const base = (api.defaults.baseURL || "").replace(/\/$/, "");
-      return `${base}${url}`;
-    }
-    return url;
-  };
-
-  const toModelUrl = (url?: string | null) => {
-    if (!url) return "";
-    if (url.startsWith("/uploads")) {
-      const base = (api.defaults.baseURL || "").replace(/\/$/, "");
-      return `${base}${url}`;
-    }
-    return url;
-  };
+  // Use centralized image URL utilities
+  const toImageUrl = getImageUrl;
+  const toModelUrl = (url?: string | null) => getImageUrl(url) || "";
 
   const ModelViewer = (props: any) =>
     React.createElement("model-viewer" as any, props);
@@ -64,17 +64,19 @@ const Profile = () => {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [editDesignOpen, setEditDesignOpen] = useState(false);
-  const [selectedDesign, setSelectedDesign] = useState<any>(null);
-  const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
+  const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
+  const [savedDesigns, setSavedDesigns] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [viewModelOpen, setViewModelOpen] = useState(false);
   const [activeModelUrl, setActiveModelUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [designToDelete, setDesignToDelete] = useState<{ id: number; name: string } | null>(null);
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -128,15 +130,18 @@ const Profile = () => {
     }
   };
 
-  const handleEditDesign = (design: any) => {
+  const handleEditDesign = (design: Design) => {
     setSelectedDesign({
       id: design.id,
+      user_id: design.user_id,
       name: design.name,
       description: design.description,
       thumbnail_url: design.thumbnail_url,
       model_data: design.model_data,
       color_data: design.color_data,
       parts_data: design.parts_data,
+      created_at: design.created_at,
+      updated_at: design.updated_at,
     });
     setEditDesignOpen(true);
   };
@@ -239,18 +244,18 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden p-6">
+    <div className="min-h-screen relative overflow-hidden p-4 sm:p-6">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-background" />
-      <div className="absolute top-20 left-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute top-10 sm:top-20 left-5 sm:left-20 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-10 sm:bottom-20 right-5 sm:right-20 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       {/* Content */}
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 animate-slideIn">
           <div className="text-center sm:text-left">
-            <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-2">
               Profile
             </h1>
             <p className="text-muted-foreground">
@@ -262,13 +267,7 @@ const Profile = () => {
             <div className="relative group">
               <Avatar className="h-16 w-16 cursor-pointer border-2 border-primary/20 hover:border-primary transition-colors">
                 <AvatarImage
-                  src={
-                    user.avatarUrl
-                      ? user.avatarUrl.startsWith("/uploads")
-                        ? `http://localhost:3001${user.avatarUrl}`
-                        : user.avatarUrl
-                      : undefined
-                  }
+                  src={getAvatarUrl(user.avatarUrl)}
                 />
                 <AvatarFallback className="bg-primary/10">
                   {user.firstName?.[0]?.toUpperCase()}
@@ -289,7 +288,7 @@ const Profile = () => {
                 {user.firstName} {user.lastName}
               </p>
               <p className="text-sm text-muted-foreground">
-                {user.isPremium ? "Premium Member" : "Free Member"}
+                {user.membership === 'Premium' || user.membership === 'Pro' ? "Premium Member" : "Free Member"}
               </p>
             </div>
           </div>
@@ -349,8 +348,21 @@ const Profile = () => {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">Loading designs...</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {[1, 2, 3].map((i) => (
+                      <Card key={i} className="backdrop-blur-lg bg-card/50 border-border">
+                        <Skeleton className="aspect-video rounded-t-lg" />
+                        <CardContent className="p-4 space-y-3">
+                          <Skeleton className="h-5 w-3/4" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-1/2" />
+                          <div className="flex gap-2 pt-2">
+                            <Skeleton className="h-8 flex-1" />
+                            <Skeleton className="h-8 w-8" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 ) : (
                   <>
@@ -360,12 +372,14 @@ const Profile = () => {
                           key={design.id}
                           className="group backdrop-blur-lg bg-card/50 border-border hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer"
                         >
-                          <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
+                          <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center overflow-hidden">
                             {design.thumbnail_url ? (
-                              <img
-                                src={toImageUrl(design.thumbnail_url)}
+                              <OptimizedImage
+                                src={toImageUrl(design.thumbnail_url) || ''}
                                 alt={design.name}
                                 className="w-full h-full object-cover rounded-t-lg"
+                                containerClassName="w-full h-full"
+                                fallback={<Car className="h-12 w-12 text-muted-foreground" />}
                               />
                             ) : (
                               <Car className="h-12 w-12 text-muted-foreground" />
@@ -415,7 +429,10 @@ const Profile = () => {
                                 size="sm"
                                 variant="destructive"
                                 className="px-2"
-                                onClick={() => handleDeleteDesign(design.id)}
+                                onClick={() => {
+                                  setDesignToDelete({ id: design.id, name: design.name });
+                                  setDeleteDialogOpen(true);
+                                }}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -426,20 +443,38 @@ const Profile = () => {
                     </div>
 
                     {savedDesigns.length === 0 && (
-                      <div className="text-center py-12">
-                        <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-foreground mb-2">
-                          No saved designs yet
+                      <div className="text-center py-16 px-6">
+                        <div className="relative mx-auto w-24 h-24 mb-6">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full animate-pulse" />
+                          <div className="absolute inset-2 bg-gradient-to-br from-background to-card rounded-full flex items-center justify-center">
+                            <Car className="h-10 w-10 text-primary" />
+                          </div>
+                        </div>
+                        <h3 className="text-xl font-bold text-foreground mb-2">
+                          Your Garage is Empty
                         </h3>
-                        <p className="text-muted-foreground mb-4">
-                          Start customizing cars to see your designs here
+                        <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                          Start customizing your dream car with our AR studio. Choose colors, add wraps, and create stunning designs!
                         </p>
-                        <Button
-                          asChild
-                          className="bg-gradient-to-r from-automotive-orange to-automotive-orange-light hover:opacity-90 text-white"
-                        >
-                          <Link to="/ar-studio">Create Your First Design</Link>
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                          <Button
+                            asChild
+                            className="bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 text-white shadow-lg"
+                          >
+                            <Link to="/ar-studio">
+                              <Zap className="w-4 h-4 mr-2" />
+                              Start Customizing
+                            </Link>
+                          </Button>
+                          <Button
+                            asChild
+                            variant="outline"
+                          >
+                            <Link to="/features">
+                              Learn More
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </>
@@ -467,7 +502,7 @@ const Profile = () => {
                     className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                     onClick={() => setEditProfileOpen(true)}
                   >
-                    <User className="h-4 w-4 mr-2" />
+                    <UserIcon className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Button>
 
@@ -490,7 +525,7 @@ const Profile = () => {
                       variant="secondary"
                       className="w-full justify-center"
                     >
-                      {user.isPremium ? "Premium Member" : "Free Member"}
+                      {user.membership === 'Premium' || user.membership === 'Pro' ? `${user.membership} Member` : "Free Member"}
                     </Badge>
                   </div>
 
@@ -562,7 +597,7 @@ const Profile = () => {
       <EditCarDesignDialog
         open={editDesignOpen}
         onOpenChange={setEditDesignOpen}
-        design={selectedDesign}
+        design={selectedDesign ?? undefined}
         onSave={handleSaveDesign}
       />
       <Dialog open={viewModelOpen} onOpenChange={setViewModelOpen}>
@@ -590,6 +625,35 @@ const Profile = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Design</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{designToDelete?.name}"? This action cannot be undone and will permanently remove this design from your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDesignToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (designToDelete) {
+                  handleDeleteDesign(designToDelete.id);
+                  setDeleteDialogOpen(false);
+                  setDesignToDelete(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

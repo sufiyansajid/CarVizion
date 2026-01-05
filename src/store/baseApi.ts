@@ -1,8 +1,11 @@
-// baseApi.ts - Make sure the base URL is correct
+// baseApi.ts - API configuration with environment variable support
 import axios from "axios";
 
+// Use environment variable for API URL, fallback to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
 const api = axios.create({
-  baseURL: "http://localhost:3001", // This should point to your backend
+  baseURL: API_BASE_URL,
   withCredentials: true, // If you're using cookies/auth
 });
 

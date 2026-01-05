@@ -90,7 +90,7 @@ const Pricing = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden p-6">
+    <div className="min-h-screen relative overflow-hidden p-4 sm:p-6">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-background" />
       <div className="absolute top-20 left-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
@@ -99,16 +99,16 @@ const Pricing = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-16 animate-slideIn">
-          <h1 className="text-5xl font-bold text-primary mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-4 sm:mb-6">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
             Unlock the full potential of AR car customization with our premium
             features. Start free and upgrade when you're ready for more.
           </p>
 
           {/* Update badges */}
-          <div className="flex items-center justify-center gap-4 mb-8">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
             <Badge
               variant="outline"
               className="px-4 py-2 text-primary border-primary hover:bg-primary/10"

@@ -15,8 +15,6 @@ import {
   Sparkles,
   Zap,
   Layers,
-  User,
-  LogOut,
   Facebook,
   Twitter,
   Instagram,
@@ -25,6 +23,7 @@ import {
   Phone,
   MapPin,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import {
   Card,
@@ -33,20 +32,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import ThemeToggleButton from "@/components/ui/theme-toggle-button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import api from "@/store/baseApi";
-import { toast } from "sonner";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -54,36 +41,14 @@ const LandingPage = () => {
   const taglineSectionRef = useRef<HTMLDivElement | null>(null);
   const taglineRef = useRef<HTMLHeadingElement | null>(null);
   const floatingIconsRef = useRef<HTMLDivElement | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const navigate = useNavigate();
+  const [videoLoaded, setVideoLoaded] = useState(true); // Start visible - video loads immediately
 
-  // Check authentication status
+  // Check authentication status (removed local check, handled by Navbar)
+  
+  // Ensure video visibility
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        setIsAuthenticated(true);
-        try {
-          const response = await api.get("/api/users/profile");
-          setUser(response.data.user);
-        } catch (error) {
-          // Token might be invalid
-          localStorage.removeItem("token");
-          setIsAuthenticated(false);
-        }
-      }
-    };
-    checkAuth();
+    setVideoLoaded(true);
   }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsAuthenticated(false);
-    setUser(null);
-    toast.success("Logged out successfully");
-    navigate("/");
-  };
 
   const features = [
     {
@@ -266,234 +231,53 @@ const LandingPage = () => {
 
   return (
     <div className="overflow-x-hidden">
-      {/* Sticky Header - Above Video Section */}
-      <nav className="fixed top-0 left-0 right-0 z-50 w-full bg-transparent border-b border-white/20 shadow-lg backdrop-blur-sm">
-        <div className="max-w-90rem mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between py-3 sm:py-4 md:py-6">
-            <Link to="/" className="flex items-center gap-1.5 sm:gap-2">
-              <Car className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary" />
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow">
-                CarVizion
-              </h1>
-            </Link>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center gap-2">
-              <ThemeToggleButton
-                variant="gif"
-                url="https://media.giphy.com/media/KBbr4hHl9DSahKvInO/giphy.gif"
-              />
-              {isAuthenticated && user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="bg-black/40 text-white hover:bg-black/60 h-auto p-1.5"
-                    >
-                      <Avatar className="h-7 w-7 border border-white/20">
-                        <AvatarImage
-                          src={
-                            user.avatarUrl
-                              ? user.avatarUrl.startsWith("/uploads")
-                                ? `http://localhost:3001${user.avatarUrl}`
-                                : user.avatarUrl
-                              : undefined
-                          }
-                        />
-                        <AvatarFallback className="bg-primary/20 text-white text-xs">
-                          {user.firstName?.[0]?.toUpperCase()}
-                          {user.lastName?.[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.firstName} {user.lastName}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/ar-studio" className="cursor-pointer">
-                        <Car className="mr-2 h-4 w-4" />
-                        <span>AR Studio</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="cursor-pointer text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="bg-black/40 text-white hover:bg-black/60"
-                >
-                  <Menu className="h-6 w-6" />
-                </Button>
-              )}
-            </div>
-
-            {/* Desktop navigation */}
-            <div className="hidden md:flex items-center gap-4 text-white">
-              <Link to="/features">
-                <Button
-                  variant="ghost"
-                  className="text-white hover:text-primary"
-                >
-                  Features
-                </Button>
-              </Link>
-              <Link to="/pricing">
-                <Button
-                  variant="ghost"
-                  className="text-white hover:text-primary"
-                >
-                  Pricing
-                </Button>
-              </Link>
-              <Link to="/about">
-                <Button
-                  variant="ghost"
-                  className="text-white hover:text-primary"
-                >
-                  About
-                </Button>
-              </Link>
-              <ThemeToggleButton
-                variant="gif"
-                url="https://media.giphy.com/media/KBbr4hHl9DSahKvInO/giphy.gif"
-              />
-              {isAuthenticated && user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex items-center gap-2 text-white hover:bg-white/10 h-auto py-2 px-3"
-                    >
-                      <Avatar className="h-8 w-8 border-2 border-white/20">
-                        <AvatarImage
-                          src={
-                            user.avatarUrl
-                              ? user.avatarUrl.startsWith("/uploads")
-                                ? `http://localhost:3001${user.avatarUrl}`
-                                : user.avatarUrl
-                              : undefined
-                          }
-                        />
-                        <AvatarFallback className="bg-primary/20 text-white text-xs">
-                          {user.firstName?.[0]?.toUpperCase()}
-                          {user.lastName?.[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="hidden lg:inline-block">
-                        {user.firstName} {user.lastName}
-                      </span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.firstName} {user.lastName}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/ar-studio" className="cursor-pointer">
-                        <Car className="mr-2 h-4 w-4" />
-                        <span>AR Studio</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="cursor-pointer text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <>
-                  <Link to="/login">
-                    <Button
-                      variant="outline"
-                      className="border-white text-white hover:bg-white/10"
-                    >
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link to="/register">
-                    <Button
-                      variant="default"
-                      className="bg-primary text-white hover:bg-primary/90"
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <section
         id="video_section"
         className="h-[85vh] md:h-screen w-screen relative"
       >
+        {/* Rotating Car Loader */}
+        {!videoLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary to-background flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              {/* Rotating car SVG */}
+              <div className="w-24 h-24 relative" style={{ animation: "spin 2s linear infinite" }}>
+                <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-primary">
+                  <path d="M5 13l1-3h12l1 3M5 13v5h2m12-5v5h-2M7 18h10M7 18a2 2 0 100-4M17 18a2 2 0 100-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M8 10h8l-1.5-2.5a1 1 0 00-.86-.5h-3.28a1 1 0 00-.86.5L8 10z" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.2" />
+                  <circle cx="7" cy="16" r="1.5" fill="currentColor" />
+                  <circle cx="17" cy="16" r="1.5" fill="currentColor" />
+                </svg>
+                <div className="absolute inset-0 border-4 border-primary/20 border-t-primary rounded-full" style={{ animation: "spin 1s linear infinite" }} />
+              </div>
+              <p className="text-muted-foreground text-sm font-medium animate-pulse">Loading your experience...</p>
+            </div>
+          </div>
+        )}
         <video
-          className="h-full w-full object-cover"
+          className={`h-full w-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
           autoPlay
           loop
           muted
-          // src="/video/256067.mp4"
+          playsInline
+          onLoadedData={() => setVideoLoaded(true)}
+          onCanPlay={() => setVideoLoaded(true)}
+          onCanPlayThrough={() => setVideoLoaded(true)}
+          onPlaying={() => setVideoLoaded(true)}
           src="/video/video.mp4"
-          // src="https://drive.google.com/file/d/1e82PiUzQd3co8Io46ik0whR1Irji80Aa/view?usp=sharing"
         ></video>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pb-16 sm:pb-20">
-          <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/20 to-background/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/50" />
           <h1
-            className="text-[10vw] sm:text-[14vw] md:text-[16vw] font-extrabold text-transparent uppercase"
+            className="text-[10vw] sm:text-[14vw] md:text-[16vw] font-extrabold text-transparent uppercase relative z-10"
             style={{
-              WebkitTextStroke: "2px white", // outline color and thickness
+              WebkitTextStroke: "2px white",
+              textShadow: "0 4px 12px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.8)",
             }}
           >
             Carvizion
           </h1>
-          <p className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl lg:text-2xl text-foreground/80 max-w-xl px-4">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl lg:text-2xl text-white font-medium max-w-xl px-4 relative z-10" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.9)" }}>
             Immerse yourself in a new era of automotive visualization. Design
             with precision, share with confidence.
           </p>
@@ -506,22 +290,27 @@ const LandingPage = () => {
                 Launch AR Studio
               </Button>
             </Link>
-            <Link to="/demo">
+            <Link to="/features">
               <Button
                 size="lg"
                 variant="outline"
                 className="border-primary text-foreground w-full sm:w-auto text-sm sm:text-base"
               >
-                Book Live Demo
+                Learn More
               </Button>
             </Link>
           </div>
-          <div className="absolute bottom-6 sm:bottom-10 flex flex-col items-center gap-2 text-foreground/70 animate-bounce z-20">
+          <button
+            onClick={() => {
+              document.getElementById('features_section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="absolute bottom-6 sm:bottom-10 flex flex-col items-center gap-2 text-foreground/70 animate-bounce z-20 cursor-pointer hover:text-primary transition-colors"
+          >
             <span className="text-[10px] sm:text-xs tracking-[0.4em] uppercase">
               Explore
             </span>
-            <div className="w-px h-8 sm:h-12 bg-foreground/40" />
-          </div>
+            <ChevronDown className="w-5 h-5" />
+          </button>
         </div>
       </section>
 
@@ -752,34 +541,34 @@ const LandingPage = () => {
                 with precision, share with confidence.
               </p>
               <div className="flex items-center gap-4">
-                <a
-                  href="#"
+                <button
+                  onClick={() => toast.info("Social links coming soon!")}
                   className="w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
                   aria-label="Facebook"
                 >
                   <Facebook className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                </a>
-                <a
-                  href="#"
+                </button>
+                <button
+                  onClick={() => toast.info("Social links coming soon!")}
                   className="w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
                   aria-label="Twitter"
                 >
                   <Twitter className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                </a>
-                <a
-                  href="#"
+                </button>
+                <button
+                  onClick={() => toast.info("Social links coming soon!")}
                   className="w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
                   aria-label="Instagram"
                 >
                   <Instagram className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                </a>
-                <a
-                  href="#"
+                </button>
+                <button
+                  onClick={() => toast.info("Social links coming soon!")}
                   className="w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
                   aria-label="LinkedIn"
                 >
                   <Linkedin className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                </a>
+                </button>
               </div>
             </div>
 

@@ -1,7 +1,8 @@
 import React, { useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Wand2, Paintbrush, Eraser, MousePointer2, Download, Sparkles, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Upload, Wand2, Paintbrush, Eraser, MousePointer2, Download, Sparkles, Loader2, Maximize2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/store/baseApi";
 
@@ -11,7 +12,7 @@ interface TwoDStudioProps {
   toolName?: string;
 }
 
-const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool, toolValue }) => {
+const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool: _selectedTool, toolValue }) => {
   const [image, setImage] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,6 +28,7 @@ const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool, toolValue }) => {
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [isDrawing, setIsDrawing] = useState(false);
   const [originalImageData, setOriginalImageData] = useState<ImageData | null>(null);
+  const [fullscreenPreview, setFullscreenPreview] = useState(false);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -178,6 +180,48 @@ const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool, toolValue }) => {
     ctx.arc(x, y, brushSize, 0, Math.PI * 2);
     ctx.fill();
   }, [isDrawing, selectionMode, canvasSize, brushSize]);
+
+  // Touch event handlers for mobile support
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent scrolling
+    if (selectionMode !== "brush") return;
+    setIsDrawing(true);
+    
+    const touch = e.touches[0];
+    const canvas = maskCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) * (canvasSize.width / rect.width);
+    const y = (touch.clientY - rect.top) * (canvasSize.height / rect.height);
+    ctx.fillStyle = 'rgba(255, 100, 100, 0.5)';
+    ctx.beginPath();
+    ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+    ctx.fill();
+  }, [selectionMode, canvasSize, brushSize]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!isDrawing || selectionMode !== "brush") return;
+    
+    const touch = e.touches[0];
+    const canvas = maskCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) * (canvasSize.width / rect.width);
+    const y = (touch.clientY - rect.top) * (canvasSize.height / rect.height);
+    ctx.fillStyle = 'rgba(255, 100, 100, 0.5)';
+    ctx.beginPath();
+    ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+    ctx.fill();
+  }, [isDrawing, selectionMode, canvasSize, brushSize]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDrawing(false);
+  }, []);
 
   const clearMask = () => {
     const canvas = maskCanvasRef.current;
@@ -346,11 +390,23 @@ const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool, toolValue }) => {
           <div className="relative w-full h-full flex justify-center items-center bg-black/50">
             <div className="relative" style={{ width: canvasSize.width, height: canvasSize.height }}>
               <canvas ref={imageCanvasRef} width={canvasSize.width} height={canvasSize.height} className="absolute top-0 left-0 shadow-lg"/>
-              <canvas ref={maskCanvasRef} width={canvasSize.width} height={canvasSize.height} className="absolute top-0 left-0 cursor-crosshair"
-                onClick={handleCanvasClick} onMouseDown={startDrawing} onMouseUp={stopDrawing} onMouseLeave={stopDrawing} onMouseMove={draw}/>
+              <canvas 
+                ref={maskCanvasRef} 
+                width={canvasSize.width} 
+                height={canvasSize.height} 
+                className="absolute top-0 left-0 cursor-crosshair touch-none"
+                onClick={handleCanvasClick} 
+                onMouseDown={startDrawing} 
+                onMouseUp={stopDrawing} 
+                onMouseLeave={stopDrawing} 
+                onMouseMove={draw}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              />
             </div>
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm">
-              {selectionMode === "magic" ? "Click to select" : "Draw to mask"}
+              {selectionMode === "magic" ? "Tap to select" : "Draw to mask"}
             </div>
           </div>
         )}
@@ -401,15 +457,57 @@ const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool, toolValue }) => {
       )}
 
       {resultImage && (
-        <Card className="border-green-500/50 bg-green-500/5">
-          <CardHeader className="py-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Result</CardTitle>
-            <Button size="sm" variant="ghost" onClick={() => setResultImage(null)}>×</Button>
-          </CardHeader>
-          <div className="p-2 flex justify-center bg-black/20">
-            <img src={resultImage} alt="Result" className="max-h-[200px] object-contain rounded" />
-          </div>
-        </Card>
+        <>
+          <Card className="border-green-500/50 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+            <CardHeader className="py-3 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-green-500" />
+                AI Generated Result
+              </CardTitle>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="ghost" onClick={() => setFullscreenPreview(true)} title="View fullscreen">
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={downloadResult} title="Download">
+                  <Download className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setResultImage(null)}>×</Button>
+              </div>
+            </CardHeader>
+            <div 
+              className="p-4 flex justify-center bg-black/20 cursor-pointer hover:bg-black/30 transition-colors"
+              onClick={() => setFullscreenPreview(true)}
+            >
+              <img src={resultImage} alt="Result" className="max-h-[250px] object-contain rounded shadow-lg" />
+            </div>
+          </Card>
+
+          {/* Fullscreen Preview Dialog */}
+          <Dialog open={fullscreenPreview} onOpenChange={setFullscreenPreview}>
+            <DialogContent className="max-w-[90vw] max-h-[90vh]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-green-500" />
+                  AI Generated Result
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col items-center gap-4">
+                <div className="bg-black/20 rounded-lg p-4 max-h-[70vh] overflow-auto">
+                  <img src={resultImage} alt="Result" className="max-w-full max-h-[65vh] object-contain rounded" />
+                </div>
+                <div className="flex gap-3">
+                  <Button onClick={downloadResult}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Image
+                  </Button>
+                  <Button variant="outline" onClick={() => setFullscreenPreview(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
       )}
     </div>
   );

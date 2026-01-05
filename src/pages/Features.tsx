@@ -136,16 +136,16 @@ const Features = () => {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-background" />
-      <div className="absolute top-20 left-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute top-10 sm:top-20 left-5 sm:left-20 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-10 sm:bottom-20 right-5 sm:right-20 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-primary opacity-10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       <div className="max-w-7xl mx-auto relative z-10 px-4 sm:px-6 py-12 md:py-20">
         {/* Header */}
         <div className="text-center mb-16 animate-slideIn">
-          <h1 className="text-5xl md:text-6xl font-bold text-primary mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4 sm:mb-6">
             Powerful Features
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
             Everything you need to transform your car customization experience.
             From AR visualization to AI-powered design, we've got you covered.
           </p>

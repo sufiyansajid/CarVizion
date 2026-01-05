@@ -86,5 +86,6 @@ export default {
       }
     }
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require('lightswind/plugin'),require("tailwindcss-animate")],
 }
