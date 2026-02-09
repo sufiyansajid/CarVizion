@@ -1,5 +1,7 @@
+import { useRef } from "react";
 import { TransformControls } from "@react-three/drei";
 import { ARModel } from "./ARModel";
+import { Group } from "three";
 
 
 interface ARTransformableModelProps {
@@ -23,13 +25,16 @@ export const ARTransformableModel = ({
     onSelect,
     onTransformEnd,
 }: ARTransformableModelProps) => {
+    const modelRef = useRef<Group>(null!);
 
     return (
         <group onClick={(e) => { e.stopPropagation(); onSelect(); }}>
             {isSelected && (
                 <TransformControls
+                    object={modelRef}
                     mode={mode}
                     onMouseUp={(e: any) => {
+                        // When using object prop, e.target.object is the object being transformed
                         if (e?.target?.object) {
                             const { position, rotation, scale } = e.target.object;
                             onTransformEnd?.(
@@ -42,6 +47,7 @@ export const ARTransformableModel = ({
                 />
             )}
             <ARModel
+                ref={modelRef}
                 modelPath={modelPath}
                 scale={initialScale}
                 position={initialPosition}

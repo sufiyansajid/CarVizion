@@ -1,6 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef, useMemo } from "react";
+import { useMemo, forwardRef } from "react";
 import * as THREE from "three";
 
 // Preload the default car model
@@ -16,27 +16,28 @@ interface ARModelProps {
     visible?: boolean;
 }
 
-export const ARModel = ({
+export const ARModel = forwardRef<THREE.Group, ARModelProps>(({
     modelPath,
     scale = 1,
     position = [0, 0, 0],
     rotation = [0, 0, 0],
     visible = true,
-}: ARModelProps) => {
-    const { scene } = useGLTF(modelPath);
-    const modelRef = useRef<THREE.Group>(null);
+}, ref) => {
+    const { scene } = useGLTF(modelPath) as any;
+    // Use the passed ref or fallback to a local one if not provided (though in this use case it will be provided)
+    // We need to ensure we don't break if ref is not passed, but forwardRef handles that (ref can be null)
+    // However, if we need internal access, we might need useImperativeHandle or just rely on the parent.
+    // For simplicity, let's just use the forwarded ref on the group.
 
     const clonedScene = useMemo(() => scene.clone(), [scene]);
 
     useFrame(() => {
-        if (modelRef.current) {
-            // Any animations can go here
-        }
+        // Any animations can go here
     });
 
     return (
         <group
-            ref={modelRef}
+            ref={ref}
             scale={scale}
             position={position}
             rotation={rotation}
@@ -45,4 +46,6 @@ export const ARModel = ({
             <primitive object={clonedScene} />
         </group>
     );
-};
+});
+
+ARModel.displayName = "ARModel";
