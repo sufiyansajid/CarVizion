@@ -16,7 +16,7 @@ import LandingPage from "./pages/LandingPage";
 
 import Navbar from "./components/Navbar";
 import KeyboardShortcutsDialog from "./components/KeyboardShortcutsDialog";
-import { SmoothCursor } from "@/components/lightswind/smooth-cursor";
+
 
 const AppContent = () => {
   const location = useLocation();
@@ -46,15 +46,7 @@ const AppContent = () => {
 const App = () => (
   <ErrorBoundary>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      {/* Custom smooth cursor for the whole site */}
-      <SmoothCursor 
-        color="#ff6b35"
-        size={20}
-        glowEffect={true}
-        showTrail={false}
-        rotateOnMove={true}
-        scaleOnClick={true}
-      />
+
       <TooltipProvider>
         {/* Skip to content link for keyboard accessibility */}
         <a
