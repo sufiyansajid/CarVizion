@@ -8,11 +8,14 @@ import { createAnimation } from "./theme-animations";
 
 import type { AnimationStart, AnimationVariant } from "./theme-animations";
 
+import { cn } from "@/lib/utils";
+
 interface ThemeToggleAnimationProps {
   variant?: AnimationVariant;
   start?: AnimationStart;
   showLabel?: boolean;
   url?: string;
+  className?: string;
 }
 
 export default function ThemeToggleButton({
@@ -20,6 +23,7 @@ export default function ThemeToggleButton({
   start = "top-left",
   showLabel = false,
   url = "",
+  className,
 }: ThemeToggleAnimationProps) {
   const { theme, setTheme } = useTheme();
 
@@ -68,7 +72,7 @@ export default function ThemeToggleButton({
       onClick={toggleTheme}
       variant="ghost"
       size="icon"
-      className="w-9 p-0 h-9 relative group"
+      className={cn("w-9 p-0 h-9 relative group", className)}
       name="Theme Toggle Button"
     >
       <SunIcon className="size-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

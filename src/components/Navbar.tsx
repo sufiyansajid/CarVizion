@@ -76,7 +76,7 @@ const Navbar = () => {
             <img
               src="/logo-solid-black.png"
               alt="CarVizion Logo"
-              className="h-14 sm:h-16 w-auto object-contain"
+              className="h-16 sm:h-18 w-auto object-contain"
             />
           </Link>
 
@@ -201,6 +201,7 @@ const Navbar = () => {
             <ThemeToggleButton
               variant="gif"
               url="https://media.giphy.com/media/KBbr4hHl9DSahKvInO/giphy.gif"
+              className="text-white hover:text-primary hover:bg-white/10"
             />
             {isAuthenticated && user ? (
               <DropdownMenu>
@@ -265,7 +266,7 @@ const Navbar = () => {
                   <Button
                     variant="outline"
                     className={cn(
-                      "border-white hover:bg-white/10 text-white"
+                      "bg-transparent border-white hover:bg-white/10 text-white"
                     )}
                   >
                     Sign In
