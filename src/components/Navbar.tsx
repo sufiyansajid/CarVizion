@@ -33,7 +33,6 @@ const Navbar = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const isHomePage = location.pathname === "/";
 
   // Check authentication status
   useEffect(() => {
@@ -66,21 +65,18 @@ const Navbar = () => {
   };
 
   return (
-    <nav 
+    <nav
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 w-full shadow-lg transition-all duration-300",
-        isHomePage 
-          ? "bg-black/30 backdrop-blur-md border-b border-white/10" 
-          : "bg-background/95 backdrop-blur-md border-b border-border shadow-xl"
+        "fixed top-0 left-0 right-0 z-50 w-full shadow-lg transition-all duration-300 bg-black border-b border-white/10"
       )}
     >
       <div className="max-w-90rem mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between py-2 sm:py-3">
           <Link to="/" className="flex items-center">
-            <img 
-              src="/logo.png" 
-              alt="CarVizion Logo" 
-              className="h-10 sm:h-12 w-auto object-contain"
+            <img
+              src="/logo-solid-black.png"
+              alt="CarVizion Logo"
+              className="h-14 sm:h-16 w-auto object-contain"
             />
           </Link>
 
@@ -97,8 +93,7 @@ const Navbar = () => {
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "h-auto p-1.5",
-                      isHomePage ? "bg-black/40 text-white hover:bg-black/60" : "bg-secondary text-foreground hover:bg-secondary/80"
+                      "h-auto p-1.5 bg-black/40 text-white hover:bg-black/60"
                     )}
                   >
                     <Avatar className="h-7 w-7 border border-white/20">
@@ -161,8 +156,8 @@ const Navbar = () => {
                 // buttonLeft removed to use default right placement
                 buttonSize="sm"
                 buttonColor="transparent"
-                textColor={isHomePage ? "#ffffff" : "#000000"}
-                overlayBackground={isHomePage ? "rgba(0,0,0,0.95)" : "rgba(255,255,255,0.95)"}
+                textColor="#ffffff"
+                overlayBackground="rgba(0,0,0,0.95)"
                 zIndex={60}
                 className="md:hidden"
                 menuDirection="vertical"
@@ -170,7 +165,7 @@ const Navbar = () => {
                 enableBlur={true}
                 customButton={
                   <div className="relative w-full h-full flex items-center justify-center">
-                    <Menu className={cn("h-6 w-6", isHomePage ? "text-white" : "text-foreground")} />
+                    <Menu className="h-6 w-6 text-white" />
                   </div>
                 }
               />
@@ -178,14 +173,11 @@ const Navbar = () => {
           </div>
 
           {/* Desktop navigation */}
-          <div className={cn(
-            "hidden md:flex items-center gap-4",
-            isHomePage ? "text-white" : "text-foreground"
-          )}>
+          <div className="hidden md:flex items-center gap-4 text-white">
             <Link to="/features">
               <Button
                 variant="ghost"
-                className={cn("hover:text-primary", isHomePage ? "text-white" : "text-foreground")}
+                className="hover:text-primary text-white"
               >
                 Features
               </Button>
@@ -193,7 +185,7 @@ const Navbar = () => {
             <Link to="/pricing">
               <Button
                 variant="ghost"
-                className={cn("hover:text-primary", isHomePage ? "text-white" : "text-foreground")}
+                className="hover:text-primary text-white"
               >
                 Pricing
               </Button>
@@ -201,7 +193,7 @@ const Navbar = () => {
             <Link to="/about">
               <Button
                 variant="ghost"
-                className={cn("hover:text-primary", isHomePage ? "text-white" : "text-foreground")}
+                className="hover:text-primary text-white"
               >
                 About
               </Button>
@@ -216,8 +208,7 @@ const Navbar = () => {
                   <Button
                     variant="ghost"
                     className={cn(
-                      "flex items-center gap-2 hover:bg-white/10 h-auto py-2 px-3",
-                      isHomePage ? "text-white" : "text-foreground"
+                      "flex items-center gap-2 hover:bg-white/10 h-auto py-2 px-3 text-white"
                     )}
                   >
                     <Avatar className="h-8 w-8 border-2 border-white/20">
@@ -274,8 +265,7 @@ const Navbar = () => {
                   <Button
                     variant="outline"
                     className={cn(
-                      "border-white hover:bg-white/10",
-                      isHomePage ? "text-white" : "text-foreground border-border"
+                      "border-white hover:bg-white/10 text-white"
                     )}
                   >
                     Sign In
@@ -294,7 +284,7 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-    </nav>
+    </nav >
   );
 };
 
