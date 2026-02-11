@@ -13,6 +13,9 @@ interface ARTransformableModelProps {
     mode: "translate" | "rotate" | "scale";
     onSelect: () => void;
     onTransformEnd?: (position: [number, number, number], rotation: [number, number, number], scale: number) => void;
+    bodyColor?: string;
+    rimColor?: string;
+    partType?: 'body' | 'bumper' | 'spoiler' | 'rim';
 }
 
 export const ARTransformableModel = ({
@@ -24,6 +27,9 @@ export const ARTransformableModel = ({
     mode,
     onSelect,
     onTransformEnd,
+    bodyColor,
+    rimColor,
+    partType,
 }: ARTransformableModelProps) => {
     const modelRef = useRef<Group>(null!);
 
@@ -52,6 +58,9 @@ export const ARTransformableModel = ({
                 scale={initialScale}
                 position={initialPosition}
                 rotation={initialRotation}
+                bodyColor={bodyColor}
+                rimColor={rimColor}
+                partType={partType}
             />
 
             {isSelected && (

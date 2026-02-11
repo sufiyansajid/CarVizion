@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,12 +8,12 @@ import { toast } from "sonner";
 import { designApi } from "@/store/designStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useVoiceControl, parseVoiceCommand } from "@/hooks/useVoiceControl";
 import {
   Camera,
   Palette,
   Settings,
   Sticker,
-  CarFront,
   Lightbulb,
   Sun,
   Sparkles,
@@ -24,6 +24,8 @@ import {
   Box,
   Video,
   Loader2,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -75,8 +77,8 @@ const ARStudio = () => {
   const [showSpoiler, setShowSpoiler] = useState(false);
   const [spoilerStyle, setSpoilerStyle] = useState<string>("wing");
   const [rimStyle, setRimStyle] = useState<'sport' | 'classic' | 'mesh' | 'deepdish' | 'stock'>('sport');
-  const [decalUrl, setDecalUrl] = useState<string | null>(null);
-  const [wrapType, setWrapType] = useState<string | null>(null);
+  const [decalUrl, setDecalUrl] = useState<string | undefined>(undefined);
+  const [wrapType, setWrapType] = useState<string | undefined>(undefined);
 
   // Save Design State
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -103,6 +105,48 @@ const ARStudio = () => {
     'escape': () => {
       if (saveDialogOpen) setSaveDialogOpen(false);
     },
+  });
+
+  // Voice Control - 100% FREE!
+  const handleVoiceCommand = useCallback((cmd: { transcript: string; confidence: number }) => {
+    const parsed = parseVoiceCommand(cmd.transcript);
+    if (!parsed) {
+      toast.info(`Didn't understand: "${cmd.transcript}"`);
+      return;
+    }
+
+    switch (parsed.action) {
+      case 'setBodyColor':
+        setBodyColor(parsed.value as string);
+        toast.success(`Body color changed to ${parsed.colorName}`);
+        break;
+      case 'setRimColor':
+        setRimColor(parsed.value as string);
+        toast.success(`Rim color changed to ${parsed.colorName}`);
+        break;
+      case 'setUnderglowColor':
+        setUnderglowColor(parsed.value as string);
+        setUnderglowIntensity(1);
+        toast.success(`Underglow color changed to ${parsed.colorName}`);
+        break;
+      case 'showSpoiler':
+        setShowSpoiler(parsed.value as boolean);
+        toast.success(parsed.value ? 'Spoiler added' : 'Spoiler removed');
+        break;
+      case 'setTab':
+        setActiveTab(parsed.value as string);
+        toast.success(`Switched to ${(parsed.value as string).toUpperCase()} studio`);
+        break;
+      case 'saveDesign':
+        setSaveDialogOpen(true);
+        toast.success('Opening save dialog');
+        break;
+    }
+  }, []);
+
+  const { isListening, isSupported, toggleListening } = useVoiceControl({
+    onCommand: handleVoiceCommand,
+    continuous: true
   });
 
   // --- HELPER FOR 2D PROPS ---
@@ -181,118 +225,25 @@ const ARStudio = () => {
     { id: "rims", name: "Rims", icon: Settings },
     { id: "decals", name: "Decals", icon: Sticker },
     { id: "spoilers", name: "Spoilers", icon: Box },
-    { id: "bumpers", name: "Bumpers", icon: CarFront },
-    { id: "sideskirts", name: "Side Skirts", icon: CarFront },
     { id: "headlights", name: "Headlights", icon: Lightbulb },
     { id: "taillights", name: "Taillights", icon: Sun },
     { id: "underglow", name: "Under Glow", icon: Sparkles },
     { id: "windowtint", name: "Window Tint", icon: Palette },
   ];
 
-  const colorOptions = ["#ff5e1a", "#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ffffff", "#000000"];
+  const colorOptions = [
+    "#1a1a1a", // Midnight Black
+    "#f8f8f8", // Pearl White  
+    "#8b0000", // Deep Red
+    "#0f4c81", // Royal Blue
+    "#c0c0c0", // Silver
+    "#1c4587", // Navy Blue
+    "#8b4513", // Bronze
+    "#2d2d2d"  // Charcoal Gray
+  ];
   const wrapOptions = ["Matte Black", "Chrome", "Carbon Fiber", "Camo", "Gloss Red"];
   const lightOptions = ["White", "Yellow", "Blue", "RGB Glow"];
   const tintOptions = ["Light", "Medium", "Dark", "Limo"];
-
-  // Helper function to render tool panels (used for mobile view)
-  const renderToolPanel = (toolId: string) => {
-    switch (toolId) {
-      case "paint":
-        return (
-          <Card className="bg-card/80 border-border">
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Body Paint</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-6 gap-2">
-              {colorOptions.map((c, i) => (
-                <button key={i} style={{ backgroundColor: c }}
-                  className={cn("w-8 h-8 rounded border", bodyColor === c && "ring-2 ring-primary")}
-                  onClick={() => setBodyColor(c)}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        );
-      case "wraps":
-        return (
-          <Card className="bg-card/80 border-border">
-            <CardContent className="grid grid-cols-2 gap-2 pt-4">
-              {wrapOptions.map((w, i) => (
-                <Button key={i} variant={wrapType === w ? "default" : "secondary"} size="sm" onClick={() => setWrapType(w)}>
-                  {w}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
-        );
-      case "rims":
-        return (
-          <Card className="bg-card/80 border-border">
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Rim Colors</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-6 gap-2">
-              {colorOptions.map((c, i) => (
-                <button key={i} style={{ backgroundColor: c }}
-                  className={cn("w-8 h-8 rounded border", rimColor === c && "ring-2 ring-primary")}
-                  onClick={() => setRimColor(c)}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        );
-      case "windowtint":
-        return (
-          <Card className="bg-card/80 border-border">
-            <CardContent className="grid grid-cols-4 gap-2 pt-4">
-              {tintOptions.map((t, idx) => (
-                <Button key={t} size="sm" variant={windowTint === idx * 0.25 ? "default" : "outline"} onClick={() => setWindowTint(idx * 0.25)}>{t}</Button>
-              ))}
-            </CardContent>
-          </Card>
-        );
-      case "headlights":
-        return (
-          <Card className="bg-card/80 border-border">
-            <CardContent className="grid grid-cols-2 gap-2 pt-4">
-              {lightOptions.map(l => (
-                <Button key={l} size="sm" variant={headlightColor === (l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff") ? "default" : "outline"} 
-                  onClick={() => setHeadlightColor(l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff")}
-                >{l}</Button>
-              ))}
-            </CardContent>
-          </Card>
-        );
-      case "underglow":
-        return (
-          <Card className="bg-card/80 border-border">
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Underglow Color</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-6 gap-2">
-              {colorOptions.map((c, i) => (
-                <button key={i} style={{ backgroundColor: c }}
-                  className={cn("w-8 h-8 rounded border", underglowColor === c && "ring-2 ring-primary")}
-                  onClick={() => setUnderglowColor(c)}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        );
-      case "spoilers":
-        return (
-          <Card className="bg-card/80 border-border">
-            <CardContent className="pt-4">
-              <Button variant={showSpoiler ? "default" : "outline"} size="sm" className="w-full" onClick={() => setShowSpoiler(!showSpoiler)}>
-                {showSpoiler ? "Hide Spoiler" : "Show Spoiler"}
-              </Button>
-            </CardContent>
-          </Card>
-        );
-      default:
-        return (
-          <Card className="bg-card/80 border-border">
-            <CardContent className="py-6 text-center text-muted-foreground">
-              <p className="text-sm">🚧 Coming Soon</p>
-            </CardContent>
-          </Card>
-        );
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background p-2 sm:p-4 animate-slideIn">
@@ -305,6 +256,19 @@ const ARStudio = () => {
                 Studio
               </CardTitle>
               <div className="flex flex-wrap gap-2">
+                {/* Voice Control Button - FREE FEATURE! */}
+                {isSupported && (
+                  <Button
+                    variant={isListening ? "default" : "outline"}
+                    size="sm"
+                    onClick={toggleListening}
+                    title="Voice control: Say commands like 'change color to red'"
+                    className={isListening ? "animate-pulse" : ""}
+                  >
+                    {isListening ? <Mic className="w-4 h-4 mr-2" /> : <MicOff className="w-4 h-4 mr-2" />}
+                    {isListening ? "Listening..." : "Voice Control"}
+                  </Button>
+                )}
 
                 {activeTab === "3d" && (
                   <Button
@@ -487,7 +451,8 @@ const ARStudio = () => {
                       showSpoiler={showSpoiler}
                       spoilerStyle={spoilerStyle}
                       rimStyle={rimStyle}
-                      decalUrl={decalUrl || undefined}
+                      wrapType={wrapType}
+                      decalUrl={decalUrl}
                       onPartSelect={handlePartSelect}
                     />
                   </div>
@@ -506,7 +471,11 @@ const ARStudio = () => {
 
               <TabsContent value="video" className="h-full mt-0">
                 <Suspense fallback={<StudioLoadingFallback />}>
-                  <VideoStudio selectedTool={selectedTool} />
+                  <VideoStudio 
+                    selectedTool={selectedTool}
+                    bodyColor={debouncedBodyColor}
+                    rimColor={debouncedRimColor}
+                  />
                 </Suspense>
               </TabsContent>
             </div>
@@ -572,27 +541,38 @@ const ARStudio = () => {
                 {/* Rims Panel */}
                 {selectedTool === "rims" && (
                   <div className="space-y-4">
-                    {/* Rim Style Selector */}
+                    {/* Rim Style Selector - Enhanced Visual */}
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Rim Style</Label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <Label className="text-sm font-medium mb-3 block">Rim Style</Label>
+                      <div className="grid grid-cols-2 gap-3">
                         {[
-                          { value: 'sport', label: 'Sport', emoji: '⚡' },
-                          { value: 'classic', label: 'Classic', emoji: '👑' },
-                          { value: 'mesh', label: 'Mesh', emoji: '🕸️' },
-                          { value: 'deepdish', label: 'Deep Dish', emoji: '🥘' },
-                          { value: 'stock', label: 'Stock', emoji: '🔧' }
+                          { value: 'sport', label: 'Sport', emoji: '⚡', desc: 'Lightweight racing' },
+                          { value: 'classic', label: 'Classic', emoji: '👑', desc: 'Elegant luxury' },
+                          { value: 'mesh', label: 'Mesh', emoji: '🕸️', desc: 'Wire pattern' },
+                          { value: 'deepdish', label: 'Deep Dish', emoji: '🥘', desc: 'Concave style' },
+                          { value: 'stock', label: 'Stock', emoji: '🔧', desc: 'Original factory' }
                         ].map((style) => (
-                          <Button
+                          <button
                             key={style.value}
-                            variant={rimStyle === style.value ? "default" : "secondary"}
-                            size="sm"
                             onClick={() => setRimStyle(style.value as any)}
-                            className="w-full"
+                            className={cn(
+                              "relative p-3 rounded-lg border-2 transition-all hover:scale-105",
+                              rimStyle === style.value
+                                ? "border-primary bg-primary/10 shadow-lg"
+                                : "border-border bg-card hover:border-primary/50"
+                            )}
                           >
-                            <span className="mr-1">{style.emoji}</span>
-                            {style.label}
-                          </Button>
+                            <div className="text-3xl mb-1">{style.emoji}</div>
+                            <div className="font-semibold text-sm">{style.label}</div>
+                            <div className="text-xs text-muted-foreground">{style.desc}</div>
+                            {rimStyle === style.value && (
+                              <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </div>
+                            )}
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -680,10 +660,10 @@ const ARStudio = () => {
                   </div>
                 )}
                 
-                {/* Spoilers Panel */}
+                {/* Spoilers Panel - Enhanced Visual */}
                 {selectedTool === "spoilers" && (
                   <div>
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-4">
                       <Label className="text-sm font-medium">Show Spoiler</Label>
                       <Button size="sm" variant={showSpoiler ? "default" : "outline"}
                         onClick={() => setShowSpoiler(!showSpoiler)}>
@@ -692,14 +672,35 @@ const ARStudio = () => {
                     </div>
                     {showSpoiler && (
                       <div>
-                        <Label className="text-sm font-medium mb-2 block">Spoiler Style</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {["Wing", "Ducktail", "Lip", "GT"].map(s => (
-                            <Button key={s} size="sm" 
-                              variant={spoilerStyle === s.toLowerCase() ? "default" : "secondary"}
-                              onClick={() => setSpoilerStyle(s.toLowerCase())} className="w-full">
-                              {s}
-                            </Button>
+                        <Label className="text-sm font-medium mb-3 block">Spoiler Style</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { value: 'wing', label: 'Wing', emoji: '🦋', desc: 'GT racing style' },
+                            { value: 'ducktail', label: 'Ducktail', emoji: '🦆', desc: 'Low profile' },
+                            { value: 'lip', label: 'Lip', emoji: '👄', desc: 'Subtle edge' },
+                            { value: 'gt', label: 'GT', emoji: '🏁', desc: 'High downforce' }
+                          ].map(s => (
+                            <button
+                              key={s.value}
+                              onClick={() => setSpoilerStyle(s.value)}
+                              className={cn(
+                                "relative p-3 rounded-lg border-2 transition-all hover:scale-105",
+                                spoilerStyle === s.value
+                                  ? "border-primary bg-primary/10 shadow-lg"
+                                  : "border-border bg-card hover:border-primary/50"
+                              )}
+                            >
+                              <div className="text-3xl mb-1">{s.emoji}</div>
+                              <div className="font-semibold text-sm">{s.label}</div>
+                              <div className="text-xs text-muted-foreground">{s.desc}</div>
+                              {spoilerStyle === s.value && (
+                                <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                  <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                </div>
+                              )}
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -707,258 +708,54 @@ const ARStudio = () => {
                   </div>
                 )}
                 
-                {/* Decals Panel */}
+                {/* Decals Panel - Enhanced Visual */}
                 {selectedTool === "decals" && (
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Preset Decals</Label>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      {["Flames", "Stripes", "Racing", "Logo"].map(d => (
-                        <Button key={d} size="sm" 
-                          variant={decalUrl?.includes(d.toLowerCase()) ? "default" : "secondary"}
-                          onClick={() => setDecalUrl(`/decals/${d.toLowerCase()}.png`)} className="w-full">
-                          {d}
-                        </Button>
+                    <Label className="text-sm font-medium mb-3 block">Decal Styles</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { name: 'Flames', emoji: '🔥', desc: 'Racing flames', path: 'flames' },
+                        { name: 'Stripes', emoji: '🏎️', desc: 'Dual stripes', path: 'stripes' },
+                        { name: 'Racing', emoji: '🏁', desc: 'Racing numbers', path: 'racing' },
+                        { name: 'Logo', emoji: '⭐', desc: 'Custom logo', path: 'logo' }
+                      ].map(d => (
+                        <button
+                          key={d.name}
+                          onClick={() => setDecalUrl(`/decals/${d.path}.svg`)}
+                          className={cn(
+                            "relative p-3 rounded-lg border-2 transition-all hover:scale-105",
+                            decalUrl?.includes(d.path)
+                              ? "border-primary bg-primary/10 shadow-lg"
+                              : "border-border bg-card hover:border-primary/50"
+                          )}
+                        >
+                          <div className="text-3xl mb-1">{d.emoji}</div>
+                          <div className="font-semibold text-sm">{d.name}</div>
+                          <div className="text-xs text-muted-foreground">{d.desc}</div>
+                          {decalUrl?.includes(d.path) && (
+                            <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                              <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </div>
+                          )}
+                        </button>
                       ))}
                     </div>
-                    <Button size="sm" variant="outline" className="w-full" 
-                      onClick={() => setDecalUrl(null)}>
+                    <Button size="sm" variant="outline" className="w-full mt-3" 
+                      onClick={() => setDecalUrl(undefined)}>
                       Clear Decal
                     </Button>
                   </div>
                 )}
                 
-                {/* Coming Soon for other tools */}
-                {["bumpers", "sideskirts"].includes(selectedTool) && (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <p className="text-sm">🚧 Coming Soon</p>
-                    <p className="text-xs mt-1">Requires custom 3D models</p>
-                  </div>
-                )}
+
               </div>
             </div>
           )}
         </div>
 
-        {/* OLD Sidebar Tools - Hidden, keeping for reference */}
-        <div className="hidden" style={{ display: 'none' }}>
-          {/* Mobile Horizontal Toolbar */}
-          <div className="lg:hidden">
-            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-4 px-4">
-              {customizationTools.map((tool) => (
-                <Button
-                  key={tool.id}
-                  variant={selectedTool === tool.id ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "flex-shrink-0 transition-all",
-                    selectedTool === tool.id ? "text-primary-foreground" : "text-foreground"
-                  )}
-                  onClick={() => setSelectedTool(selectedTool === tool.id ? "" : tool.id)}
-                >
-                  <tool.icon className="w-4 h-4 mr-1" />
-                  <span className="text-xs">{tool.name}</span>
-                </Button>
-              ))}
-            </div>
-            {/* Mobile Tool Panel - Inline */}
-            {selectedTool && (
-              <div className="mt-3 animate-in slide-in-from-top-2">
-                {renderToolPanel(selectedTool)}
-              </div>
-            )}
-          </div>
 
-          {/* Desktop Sidebar */}
-          <div className="hidden lg:block">
-            <Card className="bg-card/90 mb-4 border-l-4 border-l-primary">
-              <CardContent className="p-4">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Current Mode</p>
-                <h3 className="text-lg font-bold flex items-center">
-                  {activeTab === "3d" ? <><Box className="w-4 h-4 mr-2 text-primary" /> 3D Interactive</> :
-                    activeTab === "2d" ? <><Camera className="w-4 h-4 mr-2 text-blue-500" /> 2D AI Gen</> :
-                      <><Video className="w-4 h-4 mr-2 text-red-500" /> AR Video</>}
-                </h3>
-              </CardContent>
-            </Card>
-
-          {customizationTools.map((tool) => (
-            <div key={tool.id}>
-              <Button
-                variant={selectedTool === tool.id ? "default" : "outline"}
-                className={cn(
-                  "w-full justify-start transition-all",
-                  selectedTool === tool.id ? "text-primary-foreground" : "text-foreground"
-                )}
-                onClick={() => setSelectedTool(selectedTool === tool.id ? "" : tool.id)}
-              >
-                <tool.icon className="w-4 h-4 mr-2" />
-                {tool.name}
-              </Button>
-
-              {/* Collapsible Panels */}
-              {selectedTool === tool.id && (
-                <div className="mt-2 transition-all duration-300 animate-in slide-in-from-top-2">
-                  {/* Paint Panel */}
-                  {tool.id === "paint" && (
-                    <Card className="bg-card/80 border-border mb-3">
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">Body Paint</CardTitle></CardHeader>
-                      <CardContent className="grid grid-cols-4 gap-2">
-                        {colorOptions.map((c, i) => (
-                          <button key={i} style={{ backgroundColor: c }}
-                            className={cn("w-8 h-8 rounded border", bodyColor === c && "ring-2 ring-primary")}
-                            onClick={() => setBodyColor(c)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  )}
-                  {/* Wraps Panel */}
-                  {tool.id === "wraps" && (
-                    <Card className="bg-card/80 border-border mb-3">
-                      <CardContent className="grid grid-cols-2 gap-2 mt-4">
-                        {wrapOptions.map((w, i) => (
-                          <Button key={i} variant={wrapType === w ? "default" : "secondary"} size="sm" onClick={() => setWrapType(w)}>
-                            {w}
-                          </Button>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  )}
-                  {/* Rims Panel */}
-                  {tool.id === "rims" && (
-                    <Card className="bg-card/80 border-border mb-3">
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">Rim Colors</CardTitle></CardHeader>
-                      <CardContent className="grid grid-cols-4 gap-2">
-                        {colorOptions.map((c, i) => (
-                          <button key={i} style={{ backgroundColor: c }}
-                            className={cn("w-8 h-8 rounded border", rimColor === c && "ring-2 ring-primary")}
-                            onClick={() => setRimColor(c)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  )}
-                  {/* Window Tint Panel */}
-                  {tool.id === "windowtint" && (
-                    <Card className="bg-card/80 border-border mb-3">
-                      <CardContent className="grid grid-cols-2 gap-2 mt-4">
-                        {tintOptions.map((t, idx) => (
-                          <Button key={t} size="sm" variant={windowTint === idx * 0.25 ? "default" : "outline"} onClick={() => setWindowTint(idx * 0.25)}>{t}</Button>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  )}
-                  {/* Headlights Panel */}
-                  {tool.id === "headlights" && (
-                      <Card className="bg-card/80 border-border mb-3">
-                          <CardContent className="grid grid-cols-2 gap-2 mt-4">
-                             {lightOptions.map(l => (
-                                 <Button key={l} size="sm" variant={headlightColor === (l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff") ? "default" : "outline"} 
-                                    onClick={() => setHeadlightColor(l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff")}
-                                 >{l}</Button>
-                             ))}
-                          </CardContent>
-                      </Card>
-
-                  )}
-                  {/* Taillights Panel */}
-                  {tool.id === "taillights" && (
-                      <Card className="bg-card/80 border-border mb-3">
-                          <CardHeader className="pb-2"><CardTitle className="text-sm">Taillight Colors</CardTitle></CardHeader>
-                          <CardContent className="grid grid-cols-4 gap-2">
-                             {["#ff0000", "#ff3300", "#cc0000", "#ff6600", "#990000", "#ffffff", "#ff00ff", "#ffff00"].map((c, i) => (
-                                 <button key={i} style={{backgroundColor: c}} 
-                                     className={cn("w-8 h-8 rounded border", taillightColor === c && "ring-2 ring-primary")}
-                                     onClick={() => setTaillightColor(c)} 
-                                 />
-                             ))}
-                          </CardContent>
-                      </Card>
-                  )}
-                  {/* Spoilers Panel */}
-                  {tool.id === "spoilers" && (
-                      <Card className="bg-card/80 border-border mb-3">
-                          <CardContent className="space-y-3 mt-4">
-                             <div className="flex items-center justify-between">
-                               <span className="text-sm">Show Spoiler</span>
-                               <Button size="sm" variant={showSpoiler ? "default" : "outline"} onClick={() => setShowSpoiler(!showSpoiler)}>
-                                 {showSpoiler ? "ON" : "OFF"}
-                               </Button>
-                             </div>
-                             {showSpoiler && (
-                               <div className="grid grid-cols-2 gap-2 pt-2">
-                                 {["Wing", "Ducktail", "Lip", "GT"].map(s => (
-                                   <Button key={s} size="sm" variant={spoilerStyle === s.toLowerCase() ? "default" : "secondary"} onClick={() => setSpoilerStyle(s.toLowerCase())}>{s}</Button>
-                                 ))}
-                               </div>
-                             )}
-                          </CardContent>
-                      </Card>
-                  )}
-                  {/* Underglow Panel */}
-                  {tool.id === "underglow" && (
-                      <Card className="bg-card/80 border-border mb-3">
-                          <CardHeader className="pb-2"><CardTitle className="text-sm">Underglow</CardTitle></CardHeader>
-                          <CardContent className="space-y-3">
-                             <div className="grid grid-cols-4 gap-2">
-                               {["#ff0000", "#00ff00", "#0000ff", "#ff00ff", "#00ffff", "#ffff00", "#ff6600", "#ffffff"].map((c, i) => (
-                                   <button key={i} style={{backgroundColor: c}} 
-                                       className={cn("w-8 h-8 rounded border", underglowColor === c && "ring-2 ring-primary")}
-                                       onClick={() => { setUnderglowColor(c); setUnderglowIntensity(1); }} 
-                                   />
-                               ))}
-                             </div>
-                             <div className="flex items-center gap-2">
-                               <span className="text-xs">Intensity</span>
-                               <input type="range" min="0" max="2" step="0.1" value={underglowIntensity} 
-                                 onChange={(e) => setUnderglowIntensity(parseFloat(e.target.value))} 
-                                 className="flex-1 h-2 bg-secondary rounded-lg cursor-pointer"
-                               />
-                             </div>
-                          </CardContent>
-                      </Card>
-                  )}
-                  {/* Decals Panel */}
-                  {tool.id === "decals" && (
-                      <Card className="bg-card/80 border-border mb-3">
-                          <CardContent className="space-y-3 mt-4">
-                             <p className="text-xs text-muted-foreground">Select preset decals:</p>
-                             <div className="grid grid-cols-2 gap-2">
-                               {["Flames", "Stripes", "Racing", "Logo"].map(d => (
-                                 <Button key={d} size="sm" variant={decalUrl?.includes(d.toLowerCase()) ? "default" : "secondary"} 
-                                   onClick={() => setDecalUrl(`/decals/${d.toLowerCase()}.png`)}>
-                                   {d}
-                                 </Button>
-                               ))}
-                             </div>
-                             <Button size="sm" variant="outline" className="w-full" onClick={() => setDecalUrl(null)}>Clear Decal</Button>
-                          </CardContent>
-                      </Card>
-                  )}
-                  {/* Bumpers - Coming Soon */}
-                  {tool.id === "bumpers" && (
-                      <Card className="bg-card/80 border-border mb-3">
-                          <CardContent className="py-6 text-center text-muted-foreground">
-                            <p className="text-sm">🚧 Coming Soon</p>
-                            <p className="text-xs mt-1">Requires custom 3D models</p>
-                          </CardContent>
-                      </Card>
-                  )}
-                  {/* Side Skirts - Coming Soon */}
-                  {tool.id === "sideskirts" && (
-                      <Card className="bg-card/80 border-border mb-3">
-                          <CardContent className="py-6 text-center text-muted-foreground">
-                            <p className="text-sm">🚧 Coming Soon</p>
-                            <p className="text-xs mt-1">Requires custom 3D models</p>
-                          </CardContent>
-                      </Card>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-          </div>{/* End Desktop Sidebar */}
-        </div>{/* End Sidebar Tools */}
       </div> {/* End flex container */}
     </div>
   );

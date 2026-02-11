@@ -29,7 +29,7 @@ type CarModelProps = ThreeElements['group'] & {
 
 export function CarModel({
   modelPath = '/models/Car3D.glb',
-  bodyColor,
+  bodyColor = '#00ffff',
   rimColor,
   windowTint = 0,
   metalness = 0.5,
@@ -259,10 +259,22 @@ export function CarModel({
       setCarParts({ body, rims, windows, lights, taillights });
       
       // Store rim positions for custom geometries
-      const positions = rims.map(mesh => ({
+      let positions = rims.map(mesh => ({
         position: [mesh.position.x, mesh.position.y, mesh.position.z] as [number, number, number],
         rotation: [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z] as [number, number, number]
       }));
+      
+      // FALLBACK: If no rims detected, use hardcoded positions for standard car layout
+      if (positions.length === 0) {
+        console.log('⚠️ No rims detected - using fallback positions');
+        positions = [
+          { position: [-0.25, 0.08, 0.4], rotation: [0, 0, Math.PI / 2] }, // Front Left
+          { position: [0.25, 0.08, 0.4], rotation: [0, 0, Math.PI / 2] }, // Front Right
+          { position: [-0.25, 0.08, -0.4], rotation: [0, 0, Math.PI / 2] }, // Rear Left
+          { position: [0.25, 0.08, -0.4], rotation: [0, 0, Math.PI / 2] } // Rear Right
+        ] as Array<{position: [number, number, number], rotation: [number, number, number]}>;
+      }
+      
       setRimPositions(positions);
       
       // Hide original rims (custom geometries will replace them)
@@ -300,6 +312,7 @@ export function CarModel({
             // Update the material
             newMat.needsUpdate = true;
             mesh.material = newMat;
+            mesh.visible = true; // Force mesh to be visible
             
             console.log(`✓ Applied ${color} to ${mesh.name} (${partName})`);
         } else {
@@ -415,7 +428,7 @@ export function CarModel({
 
   return (
     <group {...props} ref={groupRef} onClick={handleGroupClick}>
-        <primitive object={scene} />
+        <primitive object={scene} scale={[8, 8, 8]} />
         {underglowIntensity > 0 && underglowColor && (
              <spotLight
                 position={[0, 0.2, 0]}
@@ -476,7 +489,7 @@ function Spoiler({ style = 'wing', bodyColor }: { style?: string; bodyColor?: st
     // Wing Spoiler - Classic racing wing with supports
     if (style === 'wing') {
       return (
-        <group position={[0, 0.7, -2.1]}>
+        <group position={[0, 0.4, -1.4]}>
           {/* Main wing */}
           <mesh position={[0, 0.2, 0]}>
             <boxGeometry args={[1.6, 0.05, 0.35]} />
@@ -503,7 +516,7 @@ function Spoiler({ style = 'wing', bodyColor }: { style?: string; bodyColor?: st
     // Ducktail Spoiler - Sleek integrated design
     if (style === 'ducktail') {
       return (
-        <group position={[0, 0.45, -2.15]}>
+        <group position={[0, 0.32, -1.45]}>
           {/* Main ducktail piece */}
           <mesh position={[0, 0, 0]} rotation={[-0.3, 0, 0]}>
             <boxGeometry args={[1.4, 0.04, 0.25]} />
@@ -521,7 +534,7 @@ function Spoiler({ style = 'wing', bodyColor }: { style?: string; bodyColor?: st
     // Lip Spoiler - Subtle trunk lip
     if (style === 'lip') {
       return (
-        <group position={[0, 0.42, -2.1]}>
+        <group position={[0, 0.28, -1.4]}>
           {/* Main lip */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[1.5, 0.05, 0.15]} />
@@ -539,7 +552,7 @@ function Spoiler({ style = 'wing', bodyColor }: { style?: string; bodyColor?: st
     // GT Spoiler - Aggressive GT-style wing
     if (style === 'gt') {
       return (
-        <group position={[0, 0.75, -2.1]}>
+        <group position={[0, 0.5, -1.4]}>
           {/* Main GT wing - wider and taller */}
           <mesh position={[0, 0.25, 0]}>
             <boxGeometry args={[1.8, 0.06, 0.4]} />

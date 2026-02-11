@@ -67,14 +67,14 @@ const Navbar = () => {
   return (
     <nav
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 w-full shadow-lg transition-all duration-300 bg-black border-b border-white/10"
+        "fixed top-0 left-0 right-0 z-50 w-full shadow-lg transition-all duration-300 bg-black/30 backdrop-blur-md border-b border-white/10"
       )}
     >
       <div className="max-w-90rem mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between py-2 sm:py-3">
           <Link to="/" className="flex items-center">
             <img
-              src="/logo-solid-black.png"
+              src="/logo-solid-black-removebg-preview.png"
               alt="CarVizion Logo"
               className="h-16 sm:h-18 w-auto object-contain"
             />

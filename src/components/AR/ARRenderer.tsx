@@ -9,6 +9,9 @@ export interface ARPart {
     position: [number, number, number];
     rotation: [number, number, number];
     scale: number;
+    bodyColor?: string;
+    rimColor?: string;
+    partType?: 'body' | 'bumper' | 'spoiler' | 'rim';
 }
 
 interface ARRendererProps {

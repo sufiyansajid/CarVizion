@@ -60,8 +60,8 @@ export default function CarModel3D(props: CarModel3DProps) {
         
         <OrbitControls 
             makeDefault 
-            minPolarAngle={0} 
-            maxPolarAngle={Math.PI / 2} 
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI / 2.2}
             enableZoom={true}
             enablePan={false}
         />
@@ -69,3 +69,4 @@ export default function CarModel3D(props: CarModel3DProps) {
     </div>
   );
 }
+

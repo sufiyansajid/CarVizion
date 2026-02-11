@@ -9,15 +9,18 @@ import { MindARViewer } from "./AR/MindARViewer";
 
 interface VideoStudioProps {
   selectedTool: string;
+  bodyColor?: string;
+  rimColor?: string;
 }
 
 const TOOL_MODELS: Record<string, string[]> = {
+  paint: ["/models/Car3D.glb"],
   bumpers: ["/models/bumper2.glb", "/models/bumper3.glb", "/models/bumper4.glb"],
   spoilers: ["/models/universal_spoiler_1.glb", "/models/spoiler2.glb"],
   rims: ["/models/rim.glb", "/models/wheel.glb", "/models/wheel2.glb"],
 };
 
-const VideoStudio = ({ selectedTool }: VideoStudioProps) => {
+const VideoStudio = ({ selectedTool, bodyColor, rimColor }: VideoStudioProps) => {
   const [isActive, setIsActive] = useState(false);
   const [useTracking, setUseTracking] = useState(false);
   const [activeParts, setActiveParts] = useState<ARPart[]>([]);
@@ -32,16 +35,26 @@ const VideoStudio = ({ selectedTool }: VideoStudioProps) => {
   };
 
   const addPart = (modelPath: string) => {
+    // Determine part type based on selectedTool
+    let partType: 'body' | 'bumper' | 'spoiler' | 'rim' = 'body';
+    if (selectedTool === 'paint') partType = 'body';
+    else if (selectedTool === 'bumpers') partType = 'bumper';
+    else if (selectedTool === 'spoilers') partType = 'spoiler';
+    else if (selectedTool === 'rims') partType = 'rim';
+
     const newPart: ARPart = {
       id: `part-${Date.now()}`,
       modelPath,
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       scale: 1,
+      bodyColor,
+      rimColor,
+      partType,
     };
     setActiveParts([...activeParts, newPart]);
     setSelectedPartId(newPart.id);
-    setTransformMode("translate"); // Default to move mode
+    setTransformMode("translate");
     toast.success("Part added to scene");
   };
 

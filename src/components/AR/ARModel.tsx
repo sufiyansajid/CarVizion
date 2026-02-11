@@ -1,6 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, forwardRef } from "react";
+import { useMemo, forwardRef, useEffect } from "react";
 import * as THREE from "three";
 
 // Preload the default car model
@@ -14,6 +14,9 @@ interface ARModelProps {
     position?: [number, number, number];
     rotation?: [number, number, number];
     visible?: boolean;
+    bodyColor?: string;
+    rimColor?: string;
+    partType?: 'body' | 'bumper' | 'spoiler' | 'rim';
 }
 
 export const ARModel = forwardRef<THREE.Group, ARModelProps>(({
@@ -22,14 +25,36 @@ export const ARModel = forwardRef<THREE.Group, ARModelProps>(({
     position = [0, 0, 0],
     rotation = [0, 0, 0],
     visible = true,
+    bodyColor,
+    rimColor,
+    partType,
 }, ref) => {
     const { scene } = useGLTF(modelPath) as any;
-    // Use the passed ref or fallback to a local one if not provided (though in this use case it will be provided)
-    // We need to ensure we don't break if ref is not passed, but forwardRef handles that (ref can be null)
-    // However, if we need internal access, we might need useImperativeHandle or just rely on the parent.
-    // For simplicity, let's just use the forwarded ref on the group.
+
 
     const clonedScene = useMemo(() => scene.clone(), [scene]);
+
+    // Apply color based on partType
+    useEffect(() => {
+        if (!clonedScene) return;
+        const color = partType === 'rim' ? rimColor : bodyColor;
+        if (!color) return;
+
+        clonedScene.traverse((child: any) => {
+            if (child.isMesh && child.material) {
+                const mat = child.material.clone() as THREE.MeshStandardMaterial;
+                mat.map = null;
+                mat.emissiveMap = null;
+                mat.metalnessMap = null;
+                mat.roughnessMap = null;
+                mat.color = new THREE.Color(color);
+                mat.metalness = partType === 'rim' ? 0.8 : 0.3;
+                mat.roughness = partType === 'rim' ? 0.2 : 0.5;
+                mat.needsUpdate = true;
+                child.material = mat;
+            }
+        });
+    }, [clonedScene, bodyColor, rimColor, partType]);
 
     useFrame(() => {
         // Any animations can go here

@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface ToolbarItem {
   id: string;
@@ -44,7 +44,7 @@ const VerticalToolbar: React.FC<VerticalToolbarProps> = ({
             <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full" />
           )}
         </button>
-      ))}\n    </div>
+      ))}   </div>
   );
 };
 

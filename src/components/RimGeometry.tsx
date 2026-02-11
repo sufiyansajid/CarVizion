@@ -14,11 +14,12 @@ interface RimGeometryProps {
 
 export function RimGeometry({ style, rimColor = '#888888', position, rotation = [0, 0, 0] }: RimGeometryProps) {
   const color = rimColor;
+  const scale = 0.2; // Scale down to 20% to match small car model
   
   // Sport Rim - 5-spoke design
   if (style === 'sport') {
     return (
-      <group position={position} rotation={rotation}>
+      <group position={position} rotation={rotation} scale={scale}>
         {/* Main rim disc */}
         <mesh>
           <cylinderGeometry args={[0.35, 0.35, 0.12, 32]} />
