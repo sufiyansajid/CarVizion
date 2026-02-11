@@ -76,6 +76,9 @@ export const ARRenderer = ({
                             mode={transformMode}
                             onSelect={() => onSelect(part.id)}
                             onTransformEnd={(pos, rot, scale) => onUpdate(part.id, pos, rot, scale)}
+                            bodyColor={part.bodyColor}
+                            rimColor={part.rimColor}
+                            partType={part.partType}
                         />
                     ))}
 

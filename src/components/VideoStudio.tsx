@@ -70,6 +70,19 @@ const VideoStudio = ({ selectedTool, bodyColor, rimColor }: VideoStudioProps) =>
     ));
   };
 
+  const updatePartColor = (id: string, color: string) => {
+    setActiveParts(activeParts.map(p => {
+      if (p.id === id) {
+        if (p.partType === 'rim') {
+          return { ...p, rimColor: color };
+        } else {
+          return { ...p, bodyColor: color };
+        }
+      }
+      return p;
+    }));
+  };
+
   const captureImage = async () => {
     if (!videoRef.current || !isActive) return;
 
@@ -194,6 +207,26 @@ const VideoStudio = ({ selectedTool, bodyColor, rimColor }: VideoStudioProps) =>
                   <Maximize className="h-4 w-4" />
                 </Button>
               </div>
+
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mt-2">Color</span>
+              <div className="flex flex-wrap gap-2">
+                {['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#000000', '#ffffff', '#C0C0C0'].map((color) => (
+                  <button
+                    key={color}
+                    className="w-6 h-6 rounded-full border border-white/20 hover:scale-110 transition-transform shadow-sm"
+                    style={{ backgroundColor: color }}
+                    onClick={() => updatePartColor(selectedPartId!, color)}
+                  />
+                ))}
+                <div className="relative w-6 h-6 rounded-full overflow-hidden border border-white/20 hover:scale-110 transition-transform shadow-sm bg-gradient-to-br from-purple-500 to-pink-500">
+                  <input
+                    type="color"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    onChange={(e) => updatePartColor(selectedPartId!, e.target.value)}
+                  />
+                </div>
+              </div>
+
               <Button variant="outline" size="sm" className="w-full mt-2 text-xs h-9 border-primary/20 hover:bg-primary/5" onClick={() => setSelectedPartId(null)}>
                 Finish Adjusting
               </Button>
