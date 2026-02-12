@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, useCallback } from "react";
+import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,6 @@ import {
   Loader2,
   Mic,
   MicOff,
-  Car,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -415,17 +414,26 @@ const ARStudio = () => {
     }
   };
 
-  const customizationTools = [
-    { id: "paint", name: "Paint", icon: PaintBucket },
-    { id: "wraps", name: "Wraps", icon: PanelsTopLeft },
-    { id: "rims", name: "Rims", icon: Settings },
-    { id: "decals", name: "Decals", icon: Sticker },
-    { id: "spoilers", name: "Spoilers", icon: Box },
-    { id: "headlights", name: "Headlights", icon: Lightbulb },
-    { id: "taillights", name: "Taillights", icon: Sun },
-    { id: "underglow", name: "Under Glow", icon: Sparkles },
-    { id: "windowtint", name: "Window Tint", icon: Palette },
-  ];
+  const customizationTools = useMemo(() => {
+    const tools = [
+      { id: "paint", name: "Paint", icon: PaintBucket },
+      { id: "wraps", name: "Wraps", icon: PanelsTopLeft },
+      { id: "rims", name: "Rims", icon: Settings },
+      { id: "decals", name: "Decals", icon: Sticker },
+      { id: "spoilers", name: "Spoilers", icon: Box },
+      { id: "headlights", name: "Headlights", icon: Lightbulb },
+      { id: "taillights", name: "Taillights", icon: Sun },
+      { id: "underglow", name: "Under Glow", icon: Sparkles },
+      { id: "windowtint", name: "Window Tint", icon: Palette },
+    ];
+
+    if (activeTab === "video") {
+      const spoilerIndex = tools.findIndex(t => t.id === "spoilers");
+      tools.splice(spoilerIndex + 1, 0, { id: "bumpers", name: "Bumpers", icon: Shield });
+    }
+
+    return tools;
+  }, [activeTab]);
 
 
   const wrapOptions = ["Matte Black", "Chrome", "Carbon Fiber", "Camo", "Gloss Red"];
@@ -496,8 +504,8 @@ const ARStudio = () => {
                                     key={car.id}
                                     className={cn(
                                       "cursor-pointer rounded-xl border-2 p-4 transition-all hover:scale-[1.02] hover:shadow-lg",
-                                      selectedModel.id === car.id 
-                                        ? "border-primary bg-primary/5 shadow-md" 
+                                      selectedModel.id === car.id
+                                        ? "border-primary bg-primary/5 shadow-md"
                                         : "border-muted hover:border-primary/50"
                                     )}
                                     onClick={() => {
@@ -507,8 +515,8 @@ const ARStudio = () => {
                                   >
                                     <div className="aspect-video rounded-lg bg-gradient-to-br from-secondary to-muted mb-3 flex items-center justify-center relative overflow-hidden group">
                                       {car.thumbnail ? (
-                                        <img 
-                                          src={car.thumbnail} 
+                                        <img
+                                          src={car.thumbnail}
                                           alt={car.name}
                                           className="w-full h-full object-cover"
                                           onError={(e) => {
@@ -541,7 +549,7 @@ const ARStudio = () => {
                             </div>
                           </DialogContent>
                         </Dialog>
-                        
+        
                         {/* Save Design Dialog */}
                         <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
                           <DialogTrigger asChild>
@@ -667,7 +675,7 @@ const ARStudio = () => {
 
               <TabsContent value="video" className="h-full mt-0">
                 <Suspense fallback={<StudioLoadingFallback />}>
-                  <VideoStudio 
+                  <VideoStudio
                     selectedTool={selectedTool}
                     bodyColor={debouncedBodyColor}
                     rimColor={debouncedRimColor}
@@ -681,17 +689,11 @@ const ARStudio = () => {
         {/* Vertical Icon Toolbar - RIGHT SIDE - Desktop only */}
         <div className="hidden lg:flex flex-shrink-0 gap-0">
           <VerticalToolbar 
-            tools={customizationTools.filter(t => {
-              if (activeTab === "2d") {
-                // Keep decals enabled for 2D, but maybe hide spoilers/taillights if not supported
-                return !["spoilers", "taillights"].includes(t.id);
-              }
-              return true;
-            })}
+            tools={customizationTools}
             selectedTool={selectedTool}
             onToolSelect={(toolId) => setSelectedTool(selectedTool === toolId ? "" : toolId)}
           />
-          
+
           {/* Slide-out Panel for Tool Options */}
           {selectedTool && (
             <div className="w-80 bg-card/95 backdrop-blur-sm border-l border-border p-4 animate-in slide-in-from-right-5 duration-300">
@@ -704,11 +706,11 @@ const ARStudio = () => {
                   ✕
                 </Button>
               </div>
-              
+
               <div className="space-y-3">
                 {/* Paint Panel */}
                 {selectedTool === "paint" && (
-                  <ColorPicker 
+                  <ColorPicker
                     label="Body Paint"
                     color={(activeTab === "2d" ? twoDBodyColor : bodyColor) || "#ff5e1a"}
                     onChange={(c) => handleUpdateValue(c)}
@@ -732,59 +734,21 @@ const ARStudio = () => {
                   />
                 )}
                 
-                {/* Design Review Trigger (Show for any active customization) */}
-                {selectedTool && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="w-full mt-4 border-dashed border-primary/40 hover:border-primary"
-                      onClick={handleRunDesignReview}
-                    >
-                      <Sparkles className="w-4 h-4 mr-2 text-primary" />
-                      AI Design Review (Local)
-                    </Button>
-
-                    {designReview && (
-                      <Card className="mt-4 border-primary/20 bg-primary/5">
-                        <CardHeader className="py-2 px-4 border-b border-primary/10">
-                          <CardTitle className="text-sm flex items-center justify-between">
-                            <span className="font-semibold">{designReview.title}</span>
-                            <span className="text-primary font-bold">{designReview.rating}%</span>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="py-3 px-4">
-                          <p className="text-xs text-muted-foreground leading-relaxed italic">
-                            "{designReview.message}"
-                          </p>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="w-full mt-2 text-[10px] h-6 opacity-60 hover:opacity-100"
-                            onClick={() => setDesignReview(null)}
-                          >
-                            Dismiss
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </>
-                )}
-                
                 {/* Wraps Panel */}
                 {selectedTool === "wraps" && (
                   <div>
                     <Label className="text-sm font-medium mb-2 block">Wrap Type</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {wrapOptions.map((w, i) => (
-                        <Button key={i} variant={(activeTab === "2d" ? twoDWrapType : wrapType) === w ? "default" : "secondary"} 
-                          size="sm" onClick={() => handleUpdateValue(w)} className="w-full">
+                        <Button key={i} variant={wrapType === w ? "default" : "secondary"} 
+                          size="sm" onClick={() => setWrapType(w)} className="w-full">
                           {w}
                         </Button>
                       ))}
                     </div>
                   </div>
                 )}
-                
+
                 {/* Rims Panel */}
                 {selectedTool === "rims" && (
                   <div className="space-y-4">
@@ -826,9 +790,9 @@ const ARStudio = () => {
                         ))}
                       </div>
                     </div>
-                    
+
                     {/* Rim Color Picker */}
-                    <ColorPicker 
+                    <ColorPicker
                       label="Rim Color"
                       color={(activeTab === "2d" ? twoDRimColor : rimColor) || "#ffffff"}
                       onChange={(c) => handleUpdateValue(c)}
@@ -846,7 +810,7 @@ const ARStudio = () => {
                     />
                   </div>
                 )}
-                
+
                 {/* Window Tint Panel */}
                 {selectedTool === "windowtint" && (
                   <div>
@@ -854,51 +818,48 @@ const ARStudio = () => {
                     <div className="grid grid-cols-2 gap-2">
                       {tintOptions.map((t, idx) => (
                         <Button key={t} size="sm" 
-                          variant={(activeTab === "2d" ? twoDWindowTint : windowTint) === idx * 0.25 ? "default" : "outline"}
-                          onClick={() => handleUpdateValue((idx * 0.25).toString())} className="w-full">
+                          variant={windowTint === idx * 0.25 ? "default" : "outline"}
+                          onClick={() => setWindowTint(idx * 0.25)} className="w-full">
                           {t}
                         </Button>
                       ))}
                     </div>
                   </div>
                 )}
-                
+
                 {/* Headlights Panel */}
                 {selectedTool === "headlights" && (
                   <div>
                     <Label className="text-sm font-medium mb-2 block">Headlight Color</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      {lightOptions.map(l => {
-                        const colorVal = l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff";
-                        return (
-                          <Button key={l} size="sm" 
-                            variant={(activeTab === "2d" ? twoDHeadlightColor : headlightColor) === colorVal ? "default" : "outline"}
-                            onClick={() => handleUpdateValue(colorVal)}
-                            className="w-full">
-                            {l}
-                          </Button>
-                        );
-                      })}
+                      {lightOptions.map(l => (
+                        <Button key={l} size="sm" 
+                          variant={headlightColor === (l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff") ? "default" : "outline"}
+                          onClick={() => setHeadlightColor(l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff")}
+                          className="w-full">
+                          {l}
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 )}
-                
+
                 {/* Taillights Panel */}
                 {selectedTool === "taillights" && (
                   <div>
                     <Label className="text-sm font-medium mb-2 block">Taillight Color</Label>
-                    <ColorPicker 
+                    <ColorPicker
                       label="Taillight Color"
                       color={taillightColor || "#ff0000"}
                       onChange={setTaillightColor}
                     />
                   </div>
                 )}
-                
+
                 {/* Underglow Panel */}
                 {selectedTool === "underglow" && (
                   <div className="space-y-4">
-                    <ColorPicker 
+                    <ColorPicker
                       label="Underglow Color"
                       color={(activeTab === "2d" ? twoDUnderglowColor : underglowColor) || "transparent"}
                       onChange={(c) => {
@@ -925,7 +886,7 @@ const ARStudio = () => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Spoilers Panel - Enhanced Visual */}
                 {selectedTool === "spoilers" && (
                   <div>
@@ -981,7 +942,7 @@ const ARStudio = () => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Decals Panel - Enhanced Visual */}
                 {selectedTool === "decals" && (
                   <div>
@@ -1023,13 +984,24 @@ const ARStudio = () => {
                         </button>
                       ))}
                     </div>
-                    <Button size="sm" variant="outline" className="w-full mt-3" 
+                    <Button size="sm" variant="outline" className="w-full mt-3"
                       onClick={() => setDecalUrl(undefined)}>
                       Clear Decal
                     </Button>
                   </div>
                 )}
-                
+
+                {/* Bumpers Panel */}
+                {selectedTool === "bumpers" && (
+                  <div className="bg-secondary/20 rounded-lg p-4 text-center mt-4 border border-primary/10 animate-in fade-in">
+                    <Shield className="w-8 h-8 mx-auto mb-2 text-primary/50" />
+                    <p className="text-sm font-medium">Bumper Selection</p>
+                    <p className="text-xs text-muted-foreground mt-1 text-balance">
+                      Please select specific bumper styles from the studio view controls.
+                    </p>
+                  </div>
+                )}
+
 
               </div>
             </div>
