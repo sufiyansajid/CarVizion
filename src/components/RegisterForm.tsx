@@ -49,14 +49,15 @@ const RegisterForm = () => {
       localStorage.setItem("token", response.token);
       toast.success("Registration successful!");
       navigate("/profile");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
       console.error("Registration error details:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.response?.data?.message || error.message,
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.response?.data?.message || err.message,
       });
 
-      toast.error(error.response?.data?.message || "Registration failed");
+      toast.error(err.response?.data?.message || "Registration failed");
     } finally {
       setIsLoading(false);
     }

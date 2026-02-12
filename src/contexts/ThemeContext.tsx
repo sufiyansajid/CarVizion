@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react"
+/* eslint-disable react-refresh/only-export-components */
 import type { ReactNode } from "react";
 
 type Theme = "dark" | "light";

@@ -7,9 +7,9 @@ export interface Design {
   name: string;
   description: string;
   thumbnail_url?: string;
-  model_data: any; // Note: underscore to match database
-  color_data?: any;
-  parts_data?: any;
+  model_data: Record<string, unknown>; // Note: underscore to match database
+  color_data?: Record<string, unknown>;
+  parts_data?: Record<string, unknown>;
   created_at: string; // Auto-managed by database
   updated_at: string; // Auto-managed by database
 }
@@ -19,9 +19,9 @@ export interface DesignData {
   name: string;
   description: string;
   thumbnail_url?: string;
-  model_data?: any; // Use underscore to match database
-  color_data?: any;
-  parts_data?: any;
+  model_data?: Record<string, unknown>; // Use underscore to match database
+  color_data?: Record<string, unknown>;
+  parts_data?: Record<string, unknown>;
   // No date fields - they're auto-managed by database
 }
 
@@ -46,17 +46,6 @@ export const designApi = {
     dataUrl: string
   ): Promise<{ message: string; url: string }> => {
     const response = await api.post("/api/uploads/image", { dataUrl });
-    return response.data;
-  },
-
-  convertImageTo3D: async (
-    dataUrl: string
-  ): Promise<{ message: string; model_url: string; content_type?: string }> => {
-    const response = await api.post(
-      "/api/ai/image-to-3d",
-      { dataUrl },
-      { timeout: 600000 }
-    );
     return response.data;
   },
 

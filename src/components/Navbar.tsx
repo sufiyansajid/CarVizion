@@ -28,9 +28,16 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import HamburgerMenuOverlay from "@/components/ui/HamburgerMenuOverlay";
 
+interface User {
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,7 +50,7 @@ const Navbar = () => {
         try {
           const response = await api.get("/api/users/profile");
           setUser(response.data.user);
-        } catch (error) {
+        } catch {
           // Token might be invalid
           localStorage.removeItem("token");
           setIsAuthenticated(false);

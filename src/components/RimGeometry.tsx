@@ -1,207 +1,264 @@
+import { useGLTF, Clone } from '@react-three/drei';
+import * as THREE from 'three';
+import { Suspense, useEffect, useMemo, useLayoutEffect, useState } from 'react';
+
 /**
- * Procedural Rim Geometry Generator
- * Creates different rim styles programmatically
+ * Procedural & External Rim Geometry Generator
+ * Can load external GLB models or fallback to procedural styles
  */
 
-export type RimStyle = 'sport' | 'classic' | 'mesh' | 'deepdish' | 'stock';
+export type RimStyle = 'sport' | 'classic' | 'mesh' | 'deepdish' | 'stock' | string;
+
+interface RimAsset {
+  path: string;
+  rotationOffset?: [number, number, number];
+  scaleMultiplier?: number;
+  positionOffset?: [number, number, number];
+}
+
+const RIM_ASSET_PATHS: Record<string, RimAsset> = {
+  'concept': { 
+    path: '/models/rims/concept_car_rim.glb',
+    rotationOffset: [0, Math.PI / 2, 0], 
+    scaleMultiplier: 0.065 // Middle ground: Bigger than 0.015, smaller than 0.12
+  },
+  'sport_v2': { 
+    path: '/models/rims/rim.glb',
+    rotationOffset: [0, Math.PI / 2, 0],
+    scaleMultiplier: 0.065
+  },
+  'test_rim_1': { 
+    path: '/models/rims/morello_cerchi_-_rims_-_murgese_v.glb',
+    rotationOffset: [0, Math.PI / 2, 0], 
+    scaleMultiplier: 1.0 // Auto-scaler will handle this
+  },
+  'test_rim_2': { 
+    path: '/models/rims/weed_car_rims.glb',
+    rotationOffset: [0, Math.PI / 2, 0], 
+    scaleMultiplier: 1.0 
+  },
+  'test_rim_3': { 
+    path: '/models/rims/free_wheels_-_magnesium_rims_-_sdc.glb',
+    rotationOffset: [0, Math.PI / 2, 0], 
+    scaleMultiplier: 1.0 
+  },
+};
 
 interface RimGeometryProps {
-  style: RimStyle;
+  style: string;
   rimColor?: string;
   position: [number, number, number];
   rotation?: [number, number, number];
+  scale?: number; 
 }
 
-export function RimGeometry({ style, rimColor = '#888888', position, rotation = [0, 0, 0] }: RimGeometryProps) {
-  const color = rimColor;
-  const scale = 0.2; // Scale down to 20% to match small car model
+export function RimGeometry(props: RimGeometryProps) {
+  const asset = RIM_ASSET_PATHS[props.style];
   
-  // Sport Rim - 5-spoke design
+  if (asset) {
+    return (
+      <Suspense fallback={null}>
+        <ExternalRim asset={asset} {...props} />
+      </Suspense>
+    );
+  }
+
+  return <ProceduralRim {...props} />;
+}
+
+interface ExternalRimProps extends RimGeometryProps {
+  asset: RimAsset;
+}
+
+function ExternalRim({ asset, rimColor = '#888888', position, rotation = [0, 0, 0], scale = 0.2 }: ExternalRimProps) {
+  const { scene } = useGLTF(asset.path);
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
+  const [autoScale, setAutoScale] = useState(1);
+
+  // Auto-Scaling Logic: Normalize any rim to approx 0.62m diameter (standard-ish)
+  useLayoutEffect(() => {
+    if (!clonedScene) return;
+
+    // 1. Center the geometry first so scaling happens from center
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    // Shift opposite to center to put pivot at local 0,0,0
+    clonedScene.position.sub(center);
+
+    // 2. Measure size after centering
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maxDim = Math.max(size.x, size.y, size.z);
+    
+    // 3. TARGET DIAMETER: ~0.62 meters (approx 24-25 inches with tire)
+    // If the rim model includes tire, 0.65 is good. If just metal rim, maybe 0.5.
+    // Let's aim for 0.62 as a safe average.
+    const TARGET_DIAMETER = 0.62;
+
+    if (maxDim > 0) {
+        const scaleFactor = TARGET_DIAMETER / maxDim;
+        setAutoScale(scaleFactor);
+        console.log(`[Auto-Scale] Rim: ${asset.path}`);
+        console.log(`Original Size: ${maxDim.toFixed(4)}`);
+        console.log(`Applied Scale: ${scaleFactor.toFixed(6)}`);
+    }
+
+  }, [clonedScene, asset.path]);
+
+  // Apply materials
+  useLayoutEffect(() => {
+    clonedScene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        
+        // Preserve original material details if possible, but override color
+        const originalMat = mesh.material as THREE.MeshStandardMaterial;
+        const newMat = originalMat.clone();
+        
+        if (rimColor) newMat.color = new THREE.Color(rimColor);
+        // metalness and roughness are not passed directly to ExternalRimProps in the current setup,
+        // but if they were, they would be applied here.
+        // if (metalness !== undefined) newMat.metalness = metalness;
+        // if (roughness !== undefined) newMat.roughness = roughness;
+        
+        mesh.material = newMat;
+      }
+    });
+  }, [clonedScene, rimColor]);
+
+  // COMBINED TRANSFORM LOGIC
+  const finalRotation: [number, number, number] = [
+    rotation[0] + (asset.rotationOffset?.[0] || 0),
+    rotation[1] + (asset.rotationOffset?.[1] || 0),
+    rotation[2] + (asset.rotationOffset?.[2] || 0)
+  ];
+
+  // The scale passed from CarModel is the target diameter.
+  // We multiply by our model-specific multiplier to normalize to 1 unit.
+  const finalScale = scale * (asset.scaleMultiplier || 1);
+
+  return (
+    <group 
+      position={[
+        position[0] + (asset.positionOffset?.[0] || 0),
+        position[1] + (asset.positionOffset?.[1] || 0),
+        position[2] + (asset.positionOffset?.[2] || 0)
+      ]} 
+      rotation={finalRotation} 
+      scale={finalScale}
+    >
+      <Clone object={scene} />
+    </group>
+  );
+}
+
+// Procedural styles normalized to 0.5 radius (1.0 diameter)
+function ProceduralRim({ style, rimColor = '#888888', position, rotation = [0, 0, 0], scale = 0.5 }: RimGeometryProps) {
+  const color = rimColor;
+  
+  const rimMaterialProps = {
+    color: color,
+    metalness: 0.9,
+    roughness: 0.1,
+    envMapIntensity: 1.5,
+  };
+
   if (style === 'sport') {
     return (
       <group position={position} rotation={rotation} scale={scale}>
-        {/* Main rim disc */}
-        <mesh>
-          <cylinderGeometry args={[0.35, 0.35, 0.12, 32]} />
-          <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.5, 0.5, 0.15, 48]} />
+          <meshStandardMaterial {...rimMaterialProps} />
         </mesh>
-        
-        {/* 5 spokes */}
         {[0, 1, 2, 3, 4].map((i) => {
           const angle = (i * Math.PI * 2) / 5;
           return (
-            <mesh 
-              key={i}
-              position={[Math.sin(angle) * 0.15, 0, Math.cos(angle) * 0.15]}
-              rotation={[0, angle, 0]}
-            >
-              <boxGeometry args={[0.08, 0.12, 0.3]} />
-              <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
+            <mesh key={i} position={[0, Math.sin(angle) * 0.25, Math.cos(angle) * 0.25]} rotation={[angle, 0, 0]}>
+              <boxGeometry args={[0.12, 0.1, 0.45]} />
+              <meshStandardMaterial {...rimMaterialProps} />
             </mesh>
           );
         })}
-        
-        {/* Center cap */}
-        <mesh position={[0, 0.061, 0]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.002, 16]} />
-          <meshStandardMaterial color="#111" metalness={0.9} roughness={0.1} />
-        </mesh>
       </group>
     );
   }
   
-  // Classic Rim - Traditional spoke pattern
   if (style === 'classic') {
     return (
-      <group position={position} rotation={rotation}>
-        {/* Main rim disc */}
-        <mesh>
-          <cylinderGeometry args={[0.35, 0.35, 0.12, 32]} />
-          <meshStandardMaterial color={color} metalness={0.7} roughness={0.3} />
+      <group position={position} rotation={rotation} scale={scale}>
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.48, 0.48, 0.15, 48]} />
+          <meshStandardMaterial color={color} metalness={0.7} roughness={0.2} />
         </mesh>
-        
-        {/* 8 thin spokes */}
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-          const angle = (i * Math.PI * 2) / 8;
+        {[...Array(12)].map((_, i) => {
+          const angle = (i * Math.PI * 2) / 12;
           return (
-            <mesh 
-              key={i}
-              position={[Math.sin(angle) * 0.15, 0, Math.cos(angle) * 0.15]}
-              rotation={[0, angle, 0]}
-            >
-              <boxGeometry args={[0.04, 0.12, 0.3]} />
-              <meshStandardMaterial color={color} metalness={0.7} roughness={0.3} />
+            <mesh key={i} position={[0, Math.sin(angle) * 0.2, Math.cos(angle) * 0.2]} rotation={[angle, 0, 0]}>
+              <boxGeometry args={[0.12, 0.04, 0.42]} />
+              <meshStandardMaterial color={color} metalness={0.7} roughness={0.2} />
             </mesh>
           );
         })}
-        
-        {/* Center cap */}
-        <mesh position={[0, 0.061, 0]}>
-          <cylinderGeometry args={[0.1, 0.1, 0.002, 16]} />
-          <meshStandardMaterial color={color} metalness={0.6} roughness={0.4} />
-        </mesh>
       </group>
     );
   }
   
-  // Mesh Rim - Grid pattern
   if (style === 'mesh') {
     return (
-      <group position={position} rotation={rotation}>
-        {/* Main rim disc */}
-        <mesh>
-          <cylinderGeometry args={[0.35, 0.35, 0.12, 32]} />
-          <meshStandardMaterial color={color} metalness={0.7} roughness={0.3} />
+      <group position={position} rotation={rotation} scale={scale}>
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.5, 0.5, 0.15, 64]} />
+          <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
         </mesh>
-        
-        {/* Circular mesh pattern */}
         {[0, 1, 2].map((ring) => {
-          const radius = 0.1 + ring * 0.08;
-          const count = 8 + ring * 4;
+          const radius = 0.15 + ring * 0.12;
+          const count = 12 + ring * 6;
           return [...Array(count)].map((_, i) => {
             const angle = (i * Math.PI * 2) / count;
             return (
-              <mesh 
-                key={`${ring}-${i}`}
-                position={[Math.sin(angle) * radius, 0, Math.cos(angle) * radius]}
-                rotation={[0, angle, 0]}
-              >
-                <boxGeometry args={[0.02, 0.12, 0.05]} />
-                <meshStandardMaterial color={color} metalness={0.7} roughness={0.3} />
+              <mesh key={`${ring}-${i}`} position={[0, Math.sin(angle) * radius, Math.cos(angle) * radius]} rotation={[angle, 0, 0]}>
+                <boxGeometry args={[0.12, 0.02, 0.1]} />
+                <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
               </mesh>
             );
           });
         })}
-        
-        {/* Center cap */}
-        <mesh position={[0, 0.061, 0]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.002, 16]} />
-          <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
-        </mesh>
       </group>
     );
   }
   
-  // Deep Dish Rim - Deep concave design
   if (style === 'deepdish') {
     return (
-      <group position={position} rotation={rotation}>
-        {/* Outer rim lip */}
-        <mesh>
-          <cylinderGeometry args={[0.38, 0.35, 0.08, 32]} />
-          <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
+      <group position={position} rotation={rotation} scale={scale}>
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.52, 0.5, 0.18, 48]} />
+          <meshStandardMaterial color="#fff" metalness={1} roughness={0.05} />
         </mesh>
-        
-        {/* Inner dish - recessed */}
-        <mesh position={[0, -0.05, 0]}>
-          <cylinderGeometry args={[0.25, 0.28, 0.02, 32]} />
-          <meshStandardMaterial color={color} metalness={0.85} roughness={0.15} />
+        <mesh position={[-0.05, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.3, 0.3, 0.05, 32]} />
+          <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
         </mesh>
-        
-        {/* 6 deep spokes */}
         {[0, 1, 2, 3, 4, 5].map((i) => {
           const angle = (i * Math.PI * 2) / 6;
           return (
-            <mesh 
-              key={i}
-              position={[Math.sin(angle) * 0.12, -0.03, Math.cos(angle) * 0.12]}
-              rotation={[0, angle, 0]}
-            >
-              <boxGeometry args={[0.1, 0.06, 0.24]} />
-              <meshStandardMaterial color={color} metalness={0.85} roughness={0.15} />
+            <mesh key={i} position={[-0.02, Math.sin(angle) * 0.2, Math.cos(angle) * 0.2]} rotation={[angle, 0.2, 0]}>
+              <boxGeometry args={[0.05, 0.15, 0.35]} />
+              <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
             </mesh>
           );
         })}
-        
-        {/* Center cap - chrome */}
-        <mesh position={[0, -0.04, 0]}>
-          <cylinderGeometry args={[0.09, 0.09, 0.005, 16]} />
-          <meshStandardMaterial color="#C0C0C0" metalness={0.95} roughness={0.05} />
-        </mesh>
       </group>
     );
   }
   
-  // Stock Rim - Simple default design
-  if (style === 'stock') {
-    return (
-      <group position={position} rotation={rotation}>
-        {/* Main rim disc */}
-        <mesh>
-          <cylinderGeometry args={[0.33, 0.33, 0.12, 24]} />
-          <meshStandardMaterial color={color} metalness={0.5} roughness={0.5} />
-        </mesh>
-        
-        {/* Simple 4-spoke cross pattern */}
-        {[0, 1, 2, 3].map((i) => {
-          const angle = (i * Math.PI * 2) / 4;
-          return (
-            <mesh 
-              key={i}
-              position={[Math.sin(angle) * 0.12, 0, Math.cos(angle) * 0.12]}
-              rotation={[0, angle, 0]}
-            >
-              <boxGeometry args={[0.1, 0.12, 0.24]} />
-              <meshStandardMaterial color={color} metalness={0.5} roughness={0.5} />
-            </mesh>
-          );
-        })}
-        
-        {/* Center cap */}
-        <mesh position={[0, 0.061, 0]}>
-          <cylinderGeometry args={[0.1, 0.1, 0.002, 16]} />
-          <meshStandardMaterial color="#444" metalness={0.4} roughness={0.6} />
-        </mesh>
-      </group>
-    );
-  }
-  
-  // Default fallback
   return (
-    <group position={position} rotation={rotation}>
-      <mesh>
-        <cylinderGeometry args={[0.33, 0.33, 0.12, 24]} />
-        <meshStandardMaterial color={color} metalness={0.6} roughness={0.4} />
+    <group position={position} rotation={rotation} scale={scale}>
+      <mesh rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.48, 0.48, 0.15, 32]} />
+        <meshStandardMaterial color={color} metalness={0.5} roughness={0.5} />
       </mesh>
     </group>
   );

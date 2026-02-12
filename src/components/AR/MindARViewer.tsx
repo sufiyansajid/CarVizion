@@ -11,6 +11,7 @@ interface MindARViewerProps {
 
 declare global {
     interface Window {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         MINDAR: any;
     }
 }
@@ -25,6 +26,7 @@ export const MindARViewer = ({
     const [isInitializing, setIsInitializing] = useState(true);
 
     useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let mindarThree: any = null;
 
         const initMindAR = async () => {

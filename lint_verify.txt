@@ -1,0 +1,100 @@
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+F:\FYP\CarVizion\src\components\AR\ARModel.tsx
+  32:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\components\AR\ARTransformableModel.tsx
+  42:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\components\AR\MindARViewer.tsx
+  14:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\components\CarModel.tsx
+   41:3   error  'wrapType' is defined but never used                   @typescript-eslint/no-unused-vars
+   43:3   error  'spoilerColor' is defined but never used               @typescript-eslint/no-unused-vars
+   81:11  error  'taillights' is never reassigned. Use 'const' instead  prefer-const
+  291:84  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  332:51  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  333:51  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  334:54  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  335:53  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  336:57  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\components\LoginForm.tsx
+  52:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\components\Navbar.tsx
+  33:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:18  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+F:\FYP\CarVizion\src\components\RegisterForm.tsx
+  52:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\components\TwoDStudio.tsx
+    8:14  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+    9:31  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   13:90  error    'toolName' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+   37:23  error    'l' is never reassigned. Use 'const' instead                                                               prefer-const
+  338:6   warning  React Hook useCallback has a missing dependency: 'draw'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  510:87  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\components\dialogs\EditCarDesignDialog.tsx
+  116:15  error  'response' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  119:15  error  'response' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+F:\FYP\CarVizion\src\components\ui\badge.tsx
+  46:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\FYP\CarVizion\src\components\ui\button.tsx
+  58:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\FYP\CarVizion\src\components\ui\color-picker.tsx
+  26:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\FYP\CarVizion\src\components\ui\form.tsx
+   89:3  error  'className' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+  157:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\FYP\CarVizion\src\components\ui\navigation-menu.tsx
+  167:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\FYP\CarVizion\src\components\ui\sidebar.tsx
+  726:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\FYP\CarVizion\src\components\ui\theme-toggle-button.tsx
+  68:6  warning  React Hook React.useCallback has missing dependencies: 'start', 'updateStyles', 'url', and 'variant'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+F:\FYP\CarVizion\src\components\ui\toggle.tsx
+  45:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\FYP\CarVizion\src\contexts\ThemeContext.tsx
+  46:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+F:\FYP\CarVizion\src\hooks\useVoiceControl.ts
+   8:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\pages\ImageStudio.tsx
+   8:10  error  'cn' is defined but never used                    @typescript-eslint/no-unused-vars
+  49:11  error  'maskDataUrl' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+F:\FYP\CarVizion\src\pages\LandingPage.tsx
+  162:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\src\pages\Profile.tsx
+   92:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  206:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\FYP\CarVizion\vite.config.ts
+  6:32  error  'mode' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 46 problems (44 errors, 2 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+

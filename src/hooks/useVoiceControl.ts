@@ -4,8 +4,14 @@ import { toast } from 'sonner';
 // TypeScript declarations for Web Speech API
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      new (): any;
+    };
+    webkitSpeechRecognition: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      new (): any;
+    };
   }
 }
 
@@ -42,7 +48,7 @@ export function useVoiceControl(options: UseVoiceControlOptions = {}) {
 
   useEffect(() => {
     // Check if browser supports Speech Recognition
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     setIsSupported(!!SpeechRecognition);
     
     if (!SpeechRecognition) {
@@ -60,7 +66,7 @@ export function useVoiceControl(options: UseVoiceControlOptions = {}) {
       console.log('🎤 Voice recognition started');
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: { results: { transcript: string; confidence: number }[][] }) => {
       const last = event.results.length - 1;
       const transcript = event.results[last][0].transcript.toLowerCase();
       const confidence = event.results[last][0].confidence;
@@ -72,7 +78,7 @@ export function useVoiceControl(options: UseVoiceControlOptions = {}) {
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: { error: string }) => {
       console.error('Voice recognition error:', event.error);
       if (event.error === 'no-speech') {
         toast.error('No speech detected. Try again.');
@@ -90,7 +96,7 @@ export function useVoiceControl(options: UseVoiceControlOptions = {}) {
         console.log('↻ Restarting voice recognition...');
         try {
           recognition.start();
-        } catch (e) {
+        } catch {
           console.log('Could not restart recognition');
           setIsListening(false);
           shouldBeListeningRef.current = false;
@@ -117,7 +123,7 @@ export function useVoiceControl(options: UseVoiceControlOptions = {}) {
       shouldBeListeningRef.current = false;
       try {
         recognition.stop();
-      } catch (e) {
+      } catch {
         // Ignore errors on cleanup
       }
     };
@@ -220,6 +226,38 @@ export function parseVoiceCommand(transcript: string) {
   // Save command
   if (lower.includes('save') || lower.includes('save design')) {
     return { action: 'saveDesign', value: true };
+  }
+
+  // --- NEW COMMANDS ---
+
+  // Window Tint
+  if (lower.includes('window') || lower.includes('tint')) {
+    if (lower.includes('dark') || lower.includes('limo') || lower.includes('black')) return { action: 'setWindowTint', value: 0.9 };
+    if (lower.includes('medium')) return { action: 'setWindowTint', value: 0.5 };
+    if (lower.includes('light')) return { action: 'setWindowTint', value: 0.2 };
+    if (lower.includes('clear') || lower.includes('remove') || lower.includes('no tint')) return { action: 'setWindowTint', value: 0 };
+  }
+
+  // Rim Styles
+  if (lower.includes('rim') || lower.includes('wheel')) {
+    if (lower.includes('sport')) return { action: 'setRimStyle', value: 'sport' };
+    if (lower.includes('classic') || lower.includes('vintage')) return { action: 'setRimStyle', value: 'classic' };
+    if (lower.includes('mesh') || lower.includes('wire')) return { action: 'setRimStyle', value: 'mesh' };
+    if (lower.includes('deep') || lower.includes('dish')) return { action: 'setRimStyle', value: 'deepdish' };
+    if (lower.includes('stock') || lower.includes('original')) return { action: 'setRimStyle', value: 'stock' };
+  }
+
+  // Lights
+  if ((lower.includes('light') || lower.includes('led'))) {
+    if (lower.includes('off') || lower.includes('disable')) return { action: 'setHeadlightColor', value: '#000000' }; // Black = off
+    if (lower.includes('on') || lower.includes('enable')) return { action: 'setHeadlightColor', value: '#ffffff' };
+    
+    // Check colors for lights specifically
+    for (const [colorName, colorValue] of Object.entries(colorMap)) {
+      if (lower.includes(colorName)) {
+        return { action: 'setHeadlightColor', value: colorValue };
+      }
+    }
   }
 
   return null;

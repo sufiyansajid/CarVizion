@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Wand2, Paintbrush, Eraser, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/store/baseApi";
-import { cn } from "@/lib/utils";
+// import { cn } from "@/lib/utils";
 
 const ImageStudio = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -14,7 +14,7 @@ const ImageStudio = () => {
   const [drawMode, setDrawMode] = useState<"brush" | "eraser">("brush");
   const [brushSize, setBrushSize] = useState(12);
   
-  const canvasRef = useRef<any>(null);
+  const canvasRef = useRef<CanvasDraw>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -46,7 +46,7 @@ const ImageStudio = () => {
     
     // Quick fix: The canvas output is transparent where no stroke, and colored where stroke is.
     // We send this 'maskDataUrl'.
-    const maskDataUrl = canvasRef.current.getDataURL("png", false, "#000000"); // Background color hidden?
+    // (canvasRef.current as any)?.getDataURL("png", false, "#ffffff"); // Unused
     // Actually getDataURL argument 3 is background color. 
     // If we want a mask: Background Black, Brush White.
     // But displaying it to user: Background Transparent/Image, Brush Red (translucent).
@@ -54,7 +54,8 @@ const ImageStudio = () => {
     // Strategy: user sees Red brush. We ask canvas for data.
     // To get a pure mask, we might need a second hidden canvas or just rely on the alpha channel.
     // Let's try sending the raw stroke layer first.
-    const rawMask = canvasRef.current.getDataURL("image/png", false, "transparent");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawMask = (canvasRef.current as any).getDataURL("image/png", false, "transparent");
 
     const prompts: Record<string, string> = {
       rims_sport: "high performance sports car rims, matte black finish, detailed spokes, photorealistic, 4k",
@@ -82,9 +83,10 @@ const ImageStudio = () => {
         toast.error("No result returned", { id: "ai-gen" });
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Generation failed", { id: "ai-gen" });
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Generation failed";
+      toast.error(errorMessage, { id: "ai-gen" });
     } finally {
       setIsProcessing(false);
     }
@@ -172,7 +174,8 @@ const ImageStudio = () => {
                         variant={drawMode === "eraser" ? "default" : "outline"} 
                         onClick={() => {
                             setDrawMode("eraser");
-                            canvasRef.current?.eraseAll(); // Simplified. React-canvas-draw erase is tricky.
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (canvasRef.current as any)?.eraseAll(); // Simplified. React-canvas-draw erase is tricky.
                             // Actually react-canvas-draw doesn't have a true 'eraser' tool mode easily exposed without props.
                             // Usually you draw with white or transparent.
                             // For MVP, limit to "Clear" or just drawing.

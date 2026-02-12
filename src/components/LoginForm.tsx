@@ -49,8 +49,9 @@ const LoginForm = () => {
 
       toast.success("Successfully logged in!");
       navigate("/profile");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Login failed");
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Login failed";
+      toast.error(errorMessage);
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);

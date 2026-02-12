@@ -29,7 +29,7 @@ export const ARModel = forwardRef<THREE.Group, ARModelProps>(({
     rimColor,
     partType,
 }, ref) => {
-    const { scene } = useGLTF(modelPath) as any;
+    const { scene } = useGLTF(modelPath);
 
 
     const clonedScene = useMemo(() => scene.clone(), [scene]);
@@ -40,18 +40,21 @@ export const ARModel = forwardRef<THREE.Group, ARModelProps>(({
         const color = partType === 'rim' ? rimColor : bodyColor;
         if (!color) return;
 
-        clonedScene.traverse((child: any) => {
-            if (child.isMesh && child.material) {
-                const mat = child.material.clone() as THREE.MeshStandardMaterial;
-                mat.map = null;
-                mat.emissiveMap = null;
-                mat.metalnessMap = null;
-                mat.roughnessMap = null;
-                mat.color = new THREE.Color(color);
-                mat.metalness = partType === 'rim' ? 0.8 : 0.3;
-                mat.roughness = partType === 'rim' ? 0.2 : 0.5;
-                mat.needsUpdate = true;
-                child.material = mat;
+        clonedScene.traverse((child: THREE.Object3D) => {
+            if (child instanceof THREE.Mesh) {
+                const mesh = child as THREE.Mesh;
+                if (mesh.material) {
+                    const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material).clone() as THREE.MeshStandardMaterial;
+                    mat.map = null;
+                    mat.emissiveMap = null;
+                    mat.metalnessMap = null;
+                    mat.roughnessMap = null;
+                    mat.color = new THREE.Color(color);
+                    mat.metalness = partType === 'rim' ? 0.8 : 0.3;
+                    mat.roughness = partType === 'rim' ? 0.2 : 0.5;
+                    mat.needsUpdate = true;
+                    mesh.material = mat;
+                }
             }
         });
     }, [clonedScene, bodyColor, rimColor, partType]);

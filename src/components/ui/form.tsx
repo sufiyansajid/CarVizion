@@ -1,4 +1,5 @@
-import * as React from "react";
+import * as React from "react"
+/* eslint-disable react-refresh/only-export-components */
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
 import {
@@ -93,6 +94,7 @@ function FormLabel({
 
   return (
     <Label
+      className={cn(error && "text-destructive", className)}
       data-slot="form-label"
       data-error={!!error}
       htmlFor={formItemId}

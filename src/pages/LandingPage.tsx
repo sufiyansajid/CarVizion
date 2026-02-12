@@ -7,7 +7,6 @@ import {
   Clock,
   Eye,
   Globe,
-  Menu,
   Palette,
   Settings,
   Star,
@@ -15,10 +14,6 @@ import {
   Sparkles,
   Zap,
   Layers,
-  Facebook,
-  Twitter,
-  Instagram,
-  Linkedin,
   Mail,
   Phone,
   MapPin,
@@ -164,7 +159,7 @@ const LandingPage = () => {
       // Floating icons animation
       if (floatingIconsRef.current) {
         const icons = floatingIconsRef.current.children;
-        Array.from(icons).forEach((icon: any, index: number) => {
+        Array.from(icons).forEach((icon: Element, index: number) => {
           const randomY = gsap.utils.random(-30, 30);
           const randomX = gsap.utils.random(-20, 20);
           const randomRot = gsap.utils.random(-15, 15);
@@ -532,44 +527,17 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-8">
             {/* Brand Section */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Car className="w-8 h-8 text-primary" />
-                <h3 className="text-2xl font-bold text-primary">CarVizion</h3>
-              </div>
+              <Link to="/" className="flex items-center">
+                <img
+                  src="/logo-solid-black-removebg-preview.png"
+                  alt="CarVizion Logo"
+                  className="h-16 w-auto object-contain"
+                />
+              </Link>
               <p className="text-sm text-muted-foreground">
                 Transform your dream car with cutting-edge AR technology. Design
                 with precision, share with confidence.
               </p>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => toast.info("Social links coming soon!")}
-                  className="w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
-                  aria-label="Facebook"
-                >
-                  <Facebook className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                </button>
-                <button
-                  onClick={() => toast.info("Social links coming soon!")}
-                  className="w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
-                  aria-label="Twitter"
-                >
-                  <Twitter className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                </button>
-                <button
-                  onClick={() => toast.info("Social links coming soon!")}
-                  className="w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
-                  aria-label="Instagram"
-                >
-                  <Instagram className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                </button>
-                <button
-                  onClick={() => toast.info("Social links coming soon!")}
-                  className="w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
-                  aria-label="LinkedIn"
-                >
-                  <Linkedin className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                </button>
-              </div>
             </div>
 
             {/* Quick Links */}

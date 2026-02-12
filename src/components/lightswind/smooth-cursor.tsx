@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useSpring } from "framer-motion";
-import { FC, JSX, useEffect, useRef, useState } from "react";
+import { type FC, type JSX, useEffect, useRef, useState } from "react";
 // Utility function 'cn' (classnames) - implemented directly to resolve import error
 function cn(...inputs: (string | undefined | null | boolean)[]) {
   return inputs.filter(Boolean).join(" ");
@@ -129,9 +129,9 @@ export function SmoothCursor({
   onCursorLeave,
   disabled = false,
 }: SmoothCursorProps) {
-  const [isMoving, setIsMoving] = useState(false);
+  // const [isMoving, setIsMoving] = useState(false); // Unused
+  // const [isClicking, setIsClicking] = useState(false); // Unused
   const [isVisible, setIsVisible] = useState(true);
-  const [isClicking, setIsClicking] = useState(false);
   const [trail, setTrail] = useState<Position[]>([]);
 
   const lastMousePos = useRef<Position>({ x: 0, y: 0 });
@@ -178,7 +178,7 @@ export function SmoothCursor({
       if (!showTrail) return;
 
       setTrail(function (prev) {
-        var newTrail = [pos].concat(prev.slice(0, trailLength - 1));
+        const newTrail = [pos].concat(prev.slice(0, trailLength - 1));
         return newTrail;
       });
     };
@@ -240,11 +240,11 @@ export function SmoothCursor({
         previousAngle.current = currentAngle;
 
         scale.set(0.95);
-        setIsMoving(true);
+        // setIsMoving(true); // Unused assignment
 
         const timeout = setTimeout(function () {
           scale.set(1);
-          setIsMoving(false);
+          // setIsMoving(false); // Unused assignment
         }, 150);
 
         return function () {
@@ -267,14 +267,14 @@ export function SmoothCursor({
 
     const handleMouseDown = function () {
       if (scaleOnClick) {
-        setIsClicking(true);
+        // setIsClicking(true); // Unused assignment
         scale.set(0.8);
       }
     };
 
     const handleMouseUp = function () {
       if (scaleOnClick) {
-        setIsClicking(false);
+        // setIsClicking(false); // Unused assignment
         scale.set(1);
       }
     };

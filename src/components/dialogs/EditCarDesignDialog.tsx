@@ -40,9 +40,9 @@ type Props = {
     name: string;
     description: string;
     thumbnail_url?: string;
-    model_data?: any;
-    color_data?: any;
-    parts_data?: any;
+    model_data?: Record<string, unknown>;
+    color_data?: Record<string, unknown>;
+    parts_data?: Record<string, unknown>;
     created_at?: string;
     updated_at?: string;
   };
@@ -113,17 +113,21 @@ export function EditCarDesignDialog({
       };
 
       if (design?.id) {
-        const response = await designApi.updateDesign(design.id, designData);
+        await designApi.updateDesign(design.id, designData);
         toast.success("Design updated successfully!");
       } else {
-        const response = await designApi.createDesign(designData);
+        await designApi.createDesign(designData);
         toast.success("Design created successfully!");
       }
 
       onSave(designData);
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to save design");
+    } catch (error: unknown) {
+      // Safe error handling
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Failed to save design";
+      toast.error(errorMessage);
       console.error("Error saving design:", error);
     } finally {
       setIsLoading(false);

@@ -4,17 +4,27 @@ export interface CarModelConfig {
   path: string;
   type: 'sedan' | 'sport' | 'suv';
   description: string;
-  thumbnail?: string; // Optional thumbnail image
+  thumbnail?: string;
+  rimScale?: number;      // Manual override for rim size
+  spoilerOffset?: [number, number, number]; // Manual position for spoiler
+  manualRimPositions?: Array<{ position: [number, number, number]; rotation: [number, number, number]; scale?: number }>;
 }
 
 export const CAR_MODELS: CarModelConfig[] = [
   {
     id: 'standard',
-    name: 'Genesis Sedan',
+    name: 'Ford Raptor',
     path: '/models/FordRaptor.glb',
-    type: 'sedan',
-    description: 'The classic luxury sedan execution.',
-    thumbnail: '/images/cars/sedan-thumb.png'
+    type: 'suv',
+    description: 'Powerful off-road performance truck.',
+    thumbnail: '/images/cars/sedan-thumb.png',
+    rimScale: 1.15, // Precisely sized for the Raptor wheel wells
+    manualRimPositions: [
+      { position: [-1.08, 0.44, 1.85], rotation: [0, 0, Math.PI / 2] }, // Front Left
+      { position: [1.08, 0.44, 1.85], rotation: [0, 0, Math.PI / 2] },  // Front Right
+      { position: [-1.08, 0.46, -1.75], rotation: [0, 0, Math.PI / 2] }, // Rear Left
+      { position: [1.08, 0.46, -1.75], rotation: [0, 0, Math.PI / 2] }   // Rear Right
+    ]
   },
   {
     id: 'sport',
@@ -22,15 +32,15 @@ export const CAR_MODELS: CarModelConfig[] = [
     path: '/models/McLaren600LT.glb',
     type: 'sport',
     description: 'Performance tuned version with aerodynamic kit.',
-    thumbnail: '/images/cars/sport-thumb.png'
-  },
-  {
-    id: 'porsche',
-    name: 'Porsche 911',
-    path: '/models/Porsche911.glb',
-    type: 'sport',
-    description: 'Iconic sports car with precision handling.',
-    thumbnail: '/images/cars/porsche-thumb.png'
+    thumbnail: '/images/cars/sport-thumb.png',
+    rimScale: 1.05,
+    spoilerOffset: [0, 0.47, -1.82],
+    manualRimPositions: [
+      { position: [-0.96, 0.32, 1.38], rotation: [0, 0, Math.PI / 2] }, // Front Left - Narrowed and lowered slightly
+      { position: [0.96, 0.32, 1.38], rotation: [0, 0, Math.PI / 2] },  // Front Right
+      { position: [-0.96, 0.35, -1.35], rotation: [0, 0, Math.PI / 2] }, // Rear Left
+      { position: [0.96, 0.35, -1.35], rotation: [0, 0, Math.PI / 2] }   // Rear Right
+    ]
   }
 ];
 

@@ -1,11 +1,14 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { useGLTF, Decal, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { createPortal, type ThreeElements, type ThreeEvent } from '@react-three/fiber';
-import { CAR_3D_MAPPING, hasManualMapping, applyManualMapping } from '../config/partMapping';
-import { RimGeometry, type RimStyle } from './RimGeometry';
+import { CAR_3D_MAPPING, MODEL_MAPPINGS, hasManualMapping, applyManualMapping } from '../config/partMapping';
+import { RimGeometry } from './RimGeometry';
+import { CAR_MODELS } from '../config/carModels';
+import { CoordinateDebugger } from './CoordinateDebugger';
 
 type CarModelProps = ThreeElements['group'] & {
+  modelId?: string;
   modelPath?: string;
   bodyColor?: string;
   rimColor?: string;
@@ -19,7 +22,7 @@ type CarModelProps = ThreeElements['group'] & {
   wrapType?: string;
   spoilerStyle?: string;
   spoilerColor?: string;
-  rimStyle?: RimStyle;
+  rimStyle?: string;
   onModelLoad?: () => void;
   debugMode?: boolean;
   showSpoiler?: boolean;
@@ -28,8 +31,9 @@ type CarModelProps = ThreeElements['group'] & {
 };
 
 export function CarModel({
+  modelId = 'standard',
   modelPath = '/models/Car3D.glb',
-  bodyColor = '#00ffff',
+  bodyColor,
   rimColor,
   windowTint = 0,
   metalness = 0.5,
@@ -38,10 +42,10 @@ export function CarModel({
   underglowIntensity = 0,
   headlightColor,
   taillightColor,
-  wrapType,
+  // wrapType: _wrapType,
   spoilerStyle = 'wing',
-  spoilerColor,
-  rimStyle = 'sport',
+  // spoilerColor: _spoilerColor,
+  rimStyle = 'stock',
   onModelLoad,
   debugMode = false,
   showSpoiler = false,
@@ -67,7 +71,10 @@ export function CarModel({
   });
 
   // Store rim positions for custom rim geometries
-  const [rimPositions, setRimPositions] = useState<Array<{ position: [number, number, number]; rotation: [number, number, number] }>>([]);
+  const [rimPositions, setRimPositions] = useState<Array<{ position: [number, number, number]; rotation: [number, number, number]; scale: number }>>([]);
+  
+  // Debug state for manual tuning
+  const [debugData, setDebugData] = useState<{ position: [number, number, number]; rotation: [number, number, number]; scale: number } | null>(null);
 
   const originalMaterials = useRef<Map<string, THREE.Material | THREE.Material[]>>(new Map());
 
@@ -78,12 +85,16 @@ export function CarModel({
       let rims: THREE.Mesh[] = [];
       let windows: THREE.Mesh[] = [];
       let lights: THREE.Mesh[] = [];
-      let taillights: THREE.Mesh[] = [];
+      const taillights: THREE.Mesh[] = [];
       const allMeshes: THREE.Mesh[] = [];
       let maxVolume = 0;
 
       console.log('=== CAR MODEL MESH ANALYSIS ===');
+      console.log('Model ID:', modelId);
 
+      // Select mapping based on modelId
+      const manualMapping = MODEL_MAPPINGS[modelId] || CAR_3D_MAPPING;
+      
       // Pass 1: Collect all meshes and find max volume
       scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
@@ -102,17 +113,23 @@ export function CarModel({
         }
       });
 
+      // Pass 2: Classification with manual mapping support
+      if (hasManualMapping(manualMapping)) {
+        console.log('Using manual part mapping for', modelId);
+        const mapped = applyManualMapping(allMeshes, manualMapping);
+        body = mapped.body;
+        rims = mapped.rims;
+        windows = mapped.windows;
+        lights = mapped.lights;
+      } else {
+
       console.log(`Total meshes found: ${allMeshes.length}`);
       console.log(`Max volume: ${maxVolume.toFixed(4)}`);
 
       // Keywords for part detection - used in name matching logic below
 
       // Pass 2: Categorize with improved logic
-      if (hasManualMapping(CAR_3D_MAPPING)) {
-        const result = applyManualMapping(allMeshes, CAR_3D_MAPPING);
-        body = result.body; rims = result.rims; windows = result.windows; lights = result.lights;
-        console.log('Using manual mapping');
-      } else {
+      // Auto-detection fallback
         if (allMeshes.length <= 3) {
            allMeshes.forEach(mesh => body.push(mesh));
         } else {
@@ -144,56 +161,62 @@ export function CarModel({
             let reason = 'default';
 
             // Helper function to check if keyword appears at end or after underscore
-            const hasKeywordAtEnd = (str: string, keyword: string): boolean => {
-              const endMatch = str.endsWith(keyword) || str.endsWith(`${keyword}_0`) || 
-                               str.endsWith(`${keyword}_1`) || str.endsWith(`${keyword}_2`);
-              const underscoreMatch = str.includes(`_${keyword}_`) || str.includes(`_${keyword}0`);
-              return endMatch || underscoreMatch;
-            };
+            // REMOVED: hasKeywordAtEnd (unused)
 
             // PRIORITY 1: Name-based detection (most reliable)
             // IMPORTANT: Check more specific parts FIRST (windows, lights) before generic body parts
             
             // Windows (check FIRST because mesh names might contain both 'door' and 'window')
-            if (hasKeywordAtEnd(name, 'window') || hasKeywordAtEnd(name, 'glass') || 
-                name.includes('windshield') || name.includes('windscreen')) {
-              // BUT exclude mirrors - they should be body color
-              if (!name.includes('mirror')) {
+            // Broader check for windows (handle plurals and variations)
+            if ((name.includes('window') || name.includes('glass') || 
+                name.includes('windshield') || name.includes('windscreen')) && 
+                !name.includes('frame') && !name.includes('trim') && !name.includes('rubber') && !name.includes('seal') &&
+                !name.includes('mirror') && !name.includes('pillars')) {
                 category = 'window';
                 reason = 'name-window';
-              }
             }
             // Wheels/Rims
-            if (category === 'body' && (name.includes('wheel') || name.includes('tire') || name.includes('rim') || 
-                     name.includes('tyre') || name.includes('hub'))) {
+            else if (name.includes('wheel') || name.includes('tire') || name.includes('rim') || 
+                     name.includes('tyre') || name.includes('hub') || name.includes('brake') || name.includes('caliper')) {
               category = 'rim';
               reason = 'name-wheel';
             }
             // Headlights (specific check)
-            if (category === 'body' && (name.includes('headlight') || name.includes('front_light') || 
-                     name.includes('frontlight') || name.includes('head_light'))) {
+            else if (name.includes('headlight') || name.includes('front_light') || 
+                     name.includes('frontlight') || name.includes('head_light')) {
               category = 'light';
               reason = 'name-headlight';
             }
             // Taillights (specific check)
-            if (category === 'body' && (name.includes('taillight') || name.includes('tail_light') || 
+            else if (name.includes('taillight') || name.includes('tail_light') || 
                      name.includes('rear_light') || name.includes('rearlight') || 
-                     name.includes('brake_light'))) {
+                     name.includes('brake_light')) {
               category = 'taillight';
               reason = 'name-taillight';
             }
-            // Generic lights (only if small)
-            if (category === 'body' && (name.includes('light') || name.includes('lamp') || name.includes('led')) && 
-                     volumeRatio < 0.05) {
-              category = 'light';
-              reason = 'name-light-small';
+            // Generic lights (only if small and explicit)
+            else if ((name.includes('light') || name.includes('lamp') || name.includes('led'))) {
+               // If it's a "light" but huge, it might be a "light cover" or body part, so valid size check needed?
+               // For now, assume named lights are lights unless they are very big
+               if (volumeRatio < 0.1) {
+                  category = 'light';
+                  reason = 'name-light-small';
+               }
             }
             // Body parts (check AFTER windows to avoid false matches)
             // Mirrors should be treated as body parts so they can be colored
-            if (category === 'body' && (name.includes('body') || name.includes('door') || name.includes('hood') || 
-                name.includes('bonnet') || name.includes('trunk') || name.includes('roof') || 
-                name.includes('fender') || name.includes('panel') || name.includes('frame') ||
-                name.includes('bumper') || name.includes('chassis') || name.includes('mirror'))) {
+            // Added more catch-all terms for sports cars (diffuser, splitter, skirt, vent, cover)
+            else if (
+                name.includes('body') || name.includes('door') || name.includes('hood') || 
+                name.includes('bonnet') || name.includes('trunk') || name.includes('boot') ||
+                name.includes('roof') || name.includes('fender') || name.includes('panel') || 
+                name.includes('frame') || name.includes('bumper') || name.includes('chassis') || 
+                name.includes('mirror') || name.includes('skirt') || name.includes('spoiler') || 
+                name.includes('wing') || name.includes('diffuser') || name.includes('splitter') ||
+                name.includes('vent') || name.includes('grille') || name.includes('handle') ||
+                name.includes('intake') || name.includes('cover') || name.includes('lid') ||
+                name.includes('main') // Generic "Main" mesh
+            ) {
               category = 'body';
               reason = 'name-body';
             }
@@ -228,8 +251,8 @@ export function CarModel({
                   reason = 'geometry-corner';
                 }
               }
-              // Very large parts = definitely body
-              else if (volumeRatio > 0.5) {
+              // LOWERED THRESHOLD: Body parts might be smaller (e.g. hood is maybe 20% of volume)
+              else if (volumeRatio > 0.2) {
                 category = 'body';
                 reason = 'geometry-large';
               }
@@ -258,61 +281,69 @@ export function CarModel({
 
       setCarParts({ body, rims, windows, lights, taillights });
       
-      // Store rim positions for custom geometries
-      let positions = rims.map(mesh => ({
-        position: [mesh.position.x, mesh.position.y, mesh.position.z] as [number, number, number],
-        rotation: [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z] as [number, number, number]
-      }));
+      const carConfig = CAR_MODELS.find(c => c.id === modelId);
       
-      // FALLBACK: If no rims detected, use hardcoded positions for standard car layout
+      // MANUAL ONLY: Use pre-calibrated positions for the two remaining cars
+      let positions = carConfig?.manualRimPositions?.map(p => ({
+        position: p.position,
+        rotation: p.rotation || [0, 0, Math.PI / 2],
+        scale: p.scale || (carConfig.rimScale || 1.0)
+      })) || [];
+
+      // Static fallback if manualRimPositions is not yet defined in carModels.ts
       if (positions.length === 0) {
-        console.log('⚠️ No rims detected - using fallback positions');
-        positions = [
-          { position: [-0.25, 0.08, 0.4], rotation: [0, 0, Math.PI / 2] }, // Front Left
-          { position: [0.25, 0.08, 0.4], rotation: [0, 0, Math.PI / 2] }, // Front Right
-          { position: [-0.25, 0.08, -0.4], rotation: [0, 0, Math.PI / 2] }, // Rear Left
-          { position: [0.25, 0.08, -0.4], rotation: [0, 0, Math.PI / 2] } // Rear Right
-        ] as Array<{position: [number, number, number], rotation: [number, number, number]}>;
+        if (modelId === 'standard') { // Raptor
+            positions = [
+                { position: [-1.08, 0.44, 1.85], rotation: [0, 0, Math.PI / 2], scale: 1.15 },
+                { position: [1.08, 0.44, 1.85], rotation: [0, 0, Math.PI / 2], scale: 1.15 },
+                { position: [-1.08, 0.46, -1.75], rotation: [0, 0, Math.PI / 2], scale: 1.15 },
+                { position: [1.08, 0.46, -1.75], rotation: [0, 0, Math.PI / 2], scale: 1.15 }
+            ];
+        } else if (modelId === 'sport') { // McLaren
+            positions = [
+                { position: [-0.98, 0.33, 1.38], rotation: [0, 0, Math.PI / 2], scale: 1.05 },
+                { position: [0.98, 0.33, 1.38], rotation: [0, 0, Math.PI / 2], scale: 1.05 },
+                { position: [-0.98, 0.36, -1.35], rotation: [0, 0, Math.PI / 2], scale: 1.05 },
+                { position: [0.98, 0.36, -1.35], rotation: [0, 0, Math.PI / 2], scale: 1.05 }
+            ];
+        }
       }
-      
+
       setRimPositions(positions);
       
-      // Hide original rims (custom geometries will replace them)
+      // Hide original rims ONLY if we are using custom geometries
       rims.forEach(mesh => {
-        mesh.visible = false;
+        mesh.visible = (rimStyle === 'stock');
       });
-      
-      onModelLoad?.();
     }
-  }, [scene, onModelLoad]);
+  }, [scene, onModelLoad, modelId, rimStyle]);
 
   // --- 2. Material Application ---
   useEffect(() => {
-    const applyOrReset = (meshes: THREE.Mesh[], color: string | undefined, params: any = {}, partName: string = 'unknown') => {
+    const applyOrReset = (meshes: THREE.Mesh[], color: string | undefined, params: Record<string, unknown> = {}, partName: string = 'unknown') => {
       meshes.forEach(mesh => {
         if (color && mesh.material) {
             const originalMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
             const newMat = originalMat.clone() as THREE.MeshStandardMaterial;
             
-            // CRITICAL FIX: Clear texture maps that override colors
-            // The model has textures applied, which multiply with the color
-            // We need to remove them to see the custom colors
-            newMat.map = null; // Clear color/diffuse map
-            newMat.emissiveMap = null; // Clear emissive map
-            newMat.metalnessMap = null; // Clear metalness map
-            newMat.roughnessMap = null; // Clear roughness map
-            newMat.aoMap = null; // Clear ambient occlusion map (optional, but can affect brightness)
-            
             // Apply the color
             newMat.color = new THREE.Color(color);
             
-            // Apply additional params (metalness, roughness, emissive, etc.)
-            Object.assign(newMat, params);
+            // If it's a body part, we might want to keep some textures but reduce their impact
+            // to avoid the "washed out" look on flat colors
+            if (partName === 'BODY') {
+                newMat.roughness = roughness ?? 0.4;
+                newMat.metalness = metalness ?? 0.3;
+                // If a map exists, it might be a bake - keeping it but darkening color helps?
+                // Actually, if they want CUSTOM color, map often blocks it.
+                if (newMat.map) newMat.map = null; 
+            } else {
+                Object.assign(newMat, params);
+            }
             
-            // Update the material
             newMat.needsUpdate = true;
             mesh.material = newMat;
-            mesh.visible = true; // Force mesh to be visible
+            mesh.visible = true;
             
             console.log(`✓ Applied ${color} to ${mesh.name} (${partName})`);
         } else {
@@ -329,11 +360,11 @@ export function CarModel({
     };
 
     if (debugMode) {
-        carParts.body.forEach(m => (m.material as any).color.set('#ff5e1a'));
-        carParts.rims.forEach(m => (m.material as any).color.set('#00ffff'));
-        carParts.windows.forEach(m => (m.material as any).color.set('#ffff00'));
-        carParts.lights.forEach(m => (m.material as any).color.set('#ff00ff'));
-        carParts.taillights.forEach(m => (m.material as any).color.set('#00ff00')); // Green for taillights in debug
+        carParts.body.forEach(m => (m.material as THREE.MeshStandardMaterial).color.set('#ff5e1a'));
+        carParts.rims.forEach(m => (m.material as THREE.MeshStandardMaterial).color.set('#00ffff'));
+        carParts.windows.forEach(m => (m.material as THREE.MeshStandardMaterial).color.set('#ffff00'));
+        carParts.lights.forEach(m => (m.material as THREE.MeshStandardMaterial).color.set('#ff00ff'));
+        carParts.taillights.forEach(m => (m.material as THREE.MeshStandardMaterial).color.set('#00ff00')); // Green for taillights in debug
     } else {
       console.log('=== APPLYING COLORS ===');
       console.log(`Body color: ${bodyColor || 'none'}`);
@@ -372,7 +403,75 @@ export function CarModel({
       applyOrReset(carParts.lights, headlightColor, { emissive: headlightColor ? new THREE.Color(headlightColor) : undefined, emissiveIntensity: headlightColor ? 0.5 : 0 }, 'HEADLIGHTS');
       applyOrReset(carParts.taillights, taillightColor, { emissive: taillightColor ? new THREE.Color(taillightColor) : undefined, emissiveIntensity: taillightColor ? 0.6 : 0 }, 'TAILLIGHTS');
     }
-  }, [carParts, bodyColor, rimColor, windowTint, metalness, roughness, headlightColor, taillightColor, debugMode]);
+  }, [carParts, bodyColor, rimColor, windowTint, metalness, roughness, headlightColor, taillightColor, debugMode, modelId]);
+
+  // --- Keyboard Controls for Manual Calibration ---
+  useEffect(() => {
+    if (!debugMode) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      setDebugData(prev => {
+        // Initialize if null
+        const current = prev || { 
+            position: rimPositions[0]?.position || [-1, 0.3, 1.3], 
+            rotation: rimPositions[0]?.rotation || [0,0,0], 
+            scale: rimPositions[0]?.scale || 1 
+        };
+        
+        const step = e.shiftKey ? 0.05 : 0.01;
+        const scaleStep = 0.05;
+
+        // Scale: +/- or Numpad +/-
+        if (e.key === '+' || e.key === '=' || e.key === 'NumpadAdd') {
+            return { ...current, scale: current.scale + scaleStep };
+        }
+        if (e.key === '-' || e.key === '_' || e.key === 'NumpadSubtract') {
+            return { ...current, scale: Math.max(0.01, current.scale - scaleStep) };
+        }
+
+        // Position: Arrow Keys
+        const newPos: [number, number, number] = [...current.position];
+        if (e.key === 'ArrowUp') {
+            if (e.ctrlKey) newPos[1] += step; // Y Axis (Up)
+            else newPos[2] -= step;           // Z Axis (Forward)
+        }
+        if (e.key === 'ArrowDown') {
+            if (e.ctrlKey) newPos[1] -= step; // Y Axis (Down)
+            else newPos[2] += step;           // Z Axis (Back)
+        }
+        if (e.key === 'ArrowLeft') newPos[0] -= step; // X Axis (Left)
+        if (e.key === 'ArrowRight') newPos[0] += step; // X Axis (Right)
+
+        return { ...current, position: newPos };
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [debugMode, rimPositions]);
+
+  // --- Calculate Spoiler Position ---
+  const spoilerPosition = useMemo(() => {
+    // 0. Use manual override if provided in config
+    const carConfig = CAR_MODELS.find(c => c.id === modelId);
+    if (carConfig?.spoilerOffset) return carConfig.spoilerOffset;
+
+    if (carParts.body.length === 0) return [0, 0.4, -1.4] as [number, number, number];
+
+    const box = new THREE.Box3();
+    carParts.body.forEach(mesh => {
+        mesh.updateMatrixWorld(true);
+        const meshBox = new THREE.Box3().setFromObject(mesh);
+        // Approximation without the inner group mat
+        box.union(meshBox);
+    });
+
+    if (box.isEmpty()) return [0, 0.4, -1.4] as [number, number, number];
+    
+    // Standard rear-centered placement
+    return [0, 0.5, -1.6] as [number, number, number];
+  }, [carParts.body, modelId]);
+
 
   // --- 3. Click Handler ---
   const handleGroupClick = (e: ThreeEvent<MouseEvent>) => {
@@ -428,33 +527,58 @@ export function CarModel({
 
   return (
     <group {...props} ref={groupRef} onClick={handleGroupClick}>
-        <primitive object={scene} scale={[8, 8, 8]} />
+        {/* Scale CAR up to Meters (approx 8x) */}
+        <group scale={[8, 8, 8]}>
+            <primitive object={scene} />
+            
+            {showSpoiler && <Spoiler style={spoilerStyle} bodyColor={bodyColor} position={spoilerPosition} />}
+            
+            {/* Custom Rim Geometries - Scaled DOWN to fit */}
+            {rimStyle !== 'stock' && rimPositions.map((rimPos, index) => {
+              // Use debug data for the first wheel (Front Left) if available
+              const isFL = index === 0;
+              // Default scale factor for big rims: 0.14
+              const baseScale = rimPos.scale; 
+              
+              const finalPos = (debugData && isFL) ? debugData.position : rimPos.position;
+              const finalScale = (debugData && isFL) ? debugData.scale : baseScale;
+              
+              return (
+                <group key={`rim-grp-${index}`}>
+                    <RimGeometry
+                      style={rimStyle}
+                      rimColor={rimColor}
+                      position={finalPos}
+                      rotation={rimPos.rotation}
+                      scale={finalScale}
+                    />
+                    {/* ALWAYS SHOW DEBUGGER FOR NOW */}
+                    {isFL && (
+                      <CoordinateDebugger 
+                        label="Front Left Hub"
+                        initialData={{ position: rimPos.position, rotation: rimPos.rotation, scale: baseScale }}
+                        onUpdate={setDebugData}
+                      />
+                    )}
+                </group>
+              );
+            })}
+            
+            {decalUrl && carParts.body.length > 0 && (
+              <CarDecal targetMesh={carParts.body[0]} decalUrl={decalUrl} />
+            )}
+        </group>
+
         {underglowIntensity > 0 && underglowColor && (
              <spotLight
                 position={[0, 0.2, 0]}
                 angle={Math.PI / 2}
                 penumbra={0.5}
                 color={underglowColor}
-                intensity={underglowIntensity * 5}
+                intensity={underglowIntensity * 2} // Reduced intensity
                 distance={10}
                 castShadow
              />
-        )}
-        {showSpoiler && <Spoiler style={spoilerStyle} bodyColor={bodyColor} />}
-        
-        {/* Custom Rim Geometries */}
-        {rimPositions.map((rimPos, index) => (
-          <RimGeometry
-            key={`rim-${index}`}
-            style={rimStyle}
-            rimColor={rimColor}
-            position={rimPos.position}
-            rotation={rimPos.rotation}
-          />
-        ))}
-        
-        {decalUrl && carParts.body.length > 0 && (
-          <CarDecal targetMesh={carParts.body[0]} decalUrl={decalUrl} />
         )}
     </group>
   );
@@ -481,15 +605,18 @@ function CarDecal({ targetMesh, decalUrl }: { targetMesh: THREE.Mesh; decalUrl: 
   );
 }
 
-function Spoiler({ style = 'wing', bodyColor }: { style?: string; bodyColor?: string }) {
+// Updated component signature
+function Spoiler({ style = 'wing', bodyColor, position }: { style?: string; bodyColor?: string; position?: [number, number, number] }) {
     const color = bodyColor || "#111";
     const metalness = 0.8;
     const roughness = 0.2;
+    // Default position if not provided
+    const pos = position || [0, 0.4, -1.4];
     
     // Wing Spoiler - Classic racing wing with supports
     if (style === 'wing') {
       return (
-        <group position={[0, 0.4, -1.4]}>
+        <group position={pos}>
           {/* Main wing */}
           <mesh position={[0, 0.2, 0]}>
             <boxGeometry args={[1.6, 0.05, 0.35]} />
@@ -516,7 +643,7 @@ function Spoiler({ style = 'wing', bodyColor }: { style?: string; bodyColor?: st
     // Ducktail Spoiler - Sleek integrated design
     if (style === 'ducktail') {
       return (
-        <group position={[0, 0.32, -1.45]}>
+        <group position={[pos[0], pos[1] - 0.08, pos[2] - 0.05]}>
           {/* Main ducktail piece */}
           <mesh position={[0, 0, 0]} rotation={[-0.3, 0, 0]}>
             <boxGeometry args={[1.4, 0.04, 0.25]} />
@@ -534,7 +661,7 @@ function Spoiler({ style = 'wing', bodyColor }: { style?: string; bodyColor?: st
     // Lip Spoiler - Subtle trunk lip
     if (style === 'lip') {
       return (
-        <group position={[0, 0.28, -1.4]}>
+        <group position={[pos[0], pos[1] - 0.12, pos[2]]}>
           {/* Main lip */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[1.5, 0.05, 0.15]} />
@@ -552,7 +679,7 @@ function Spoiler({ style = 'wing', bodyColor }: { style?: string; bodyColor?: st
     // GT Spoiler - Aggressive GT-style wing
     if (style === 'gt') {
       return (
-        <group position={[0, 0.5, -1.4]}>
+        <group position={[pos[0], pos[1] + 0.1, pos[2]]}>
           {/* Main GT wing - wider and taller */}
           <mesh position={[0, 0.25, 0]}>
             <boxGeometry args={[1.8, 0.06, 0.4]} />

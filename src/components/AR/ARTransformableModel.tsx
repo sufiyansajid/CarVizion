@@ -39,6 +39,7 @@ export const ARTransformableModel = ({
                 <TransformControls
                     object={modelRef}
                     mode={mode}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onMouseUp={(e: any) => {
                         // When using object prop, e.target.object is the object being transformed
                         if (e?.target?.object) {

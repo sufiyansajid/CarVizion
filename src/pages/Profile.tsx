@@ -58,8 +58,8 @@ const Profile = () => {
   const toImageUrl = getImageUrl;
   const toModelUrl = (url?: string | null) => getImageUrl(url) || "";
 
-  const ModelViewer = (props: any) =>
-    React.createElement("model-viewer" as any, props);
+  const ModelViewer = (props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { src?: string; "camera-controls"?: boolean; "auto-rotate"?: boolean; exposure?: string; "shadow-intensity"?: string }) =>
+    React.createElement("model-viewer", props);
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
@@ -89,36 +89,28 @@ const Profile = () => {
         });
         console.log("Profile response:", res.data);
         setUser(res.data.user);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(
           "Failed to load user:",
-          err.response?.data || err.message
+          (err as { response?: { data?: unknown }; message?: string }).response?.data || (err as Error).message
         );
       }
     };
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    // Load designs after user profile is available
-    if (user?.id) {
-      fetchUserDesigns();
-    }
-  }, [user]);
-
-  if (!user) return <p>Loading...</p>;
-
-  const fetchUserDesigns = async () => {
+  const fetchUserDesigns = React.useCallback(async () => {
     try {
       setLoading(true);
       const response = await designApi.getUserDesigns();
       setSavedDesigns(response.designs || []);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
+      if (err.response?.status === 404) {
         toast.error("Designs endpoint not found. Check your backend server.");
         console.error("API Error:", error);
         setSavedDesigns([]);
-      } else if (error.response?.status === 401) {
+      } else if (err.response?.status === 401) {
         toast.error("Please login to view your designs");
         navigate("/login");
       } else {
@@ -128,7 +120,14 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    // Load designs after user profile is available
+    if (user?.id) {
+      fetchUserDesigns();
+    }
+  }, [user, fetchUserDesigns]);
 
   const handleEditDesign = (design: Design) => {
     setSelectedDesign({
@@ -156,7 +155,7 @@ const Profile = () => {
       await designApi.deleteDesign(designId);
       toast.success("Design deleted successfully!");
       fetchUserDesigns(); // Refresh the list
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.message || "Failed to delete design");
       console.error("Error deleting design:", error);
     }
@@ -204,7 +203,7 @@ const Profile = () => {
 
           setUser(response.data.user);
           toast.success("Avatar updated successfully!");
-        } catch (error: any) {
+        } catch (error: unknown) {
           toast.error(
             error.response?.data?.message || "Failed to upload avatar"
           );
@@ -227,7 +226,7 @@ const Profile = () => {
       };
 
       reader.readAsDataURL(file);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to process file");
       console.error("Error processing file:", error);
       setUploadingAvatar(false);

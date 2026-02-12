@@ -4,6 +4,7 @@ import { OrbitControls, Stage, Html } from '@react-three/drei';
 import { CarModel } from './CarModel';
 
 interface CarModel3DProps {
+  modelId?: string;
   modelPath?: string;
   bodyColor?: string;
   rimColor?: string;
@@ -17,7 +18,7 @@ interface CarModel3DProps {
   wrapType?: string;
   spoilerStyle?: string;
   spoilerColor?: string;
-  rimStyle?: 'sport' | 'classic' | 'mesh' | 'deepdish' | 'stock';
+  rimStyle?: string;
   onModelLoad?: () => void;
   debugMode?: boolean;
   showSpoiler?: boolean;
@@ -53,8 +54,8 @@ export default function CarModel3D(props: CarModel3DProps) {
     <div className="w-full h-full">
       <Canvas shadows dpr={[1, 2]} camera={{ fov: 50 }}>
         <Suspense fallback={<Loader />}>
-          <Stage environment="sunset" intensity={0.5}>
-             <CarModel {...props} onPartSelect={props.onPartSelect} />
+          <Stage environment="sunset" intensity={0.25} shadows={{ type: 'contact', opacity: 0.4, blur: 2 }}>
+             <CarModel {...props} modelId={props.modelId} onPartSelect={props.onPartSelect} />
           </Stage>
         </Suspense>
         

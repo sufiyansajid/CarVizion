@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from './input';
 import { Label } from './label';
-import { Button } from './button';
+import { Button } from "@/components/ui/button"
+/* eslint-disable react-refresh/only-export-components */
 import { cn } from '@/lib/utils';
 import { Check, Palette as PaletteIcon, Sparkles, Loader2 } from 'lucide-react';
 import { getHybridSuggestions, type ColorSuggestion } from '@/utils/colorAI';
@@ -184,23 +185,23 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         </div>
       </div>
 
-      {/* AI Suggestions Section */}
+      {/* Smart Suggestions Section */}
       <div className="space-y-2">
         <Button
           onClick={fetchAISuggestions}
           disabled={loadingSuggestions}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold"
+          className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-bold"
           size="sm"
         >
           {loadingSuggestions ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Generating...
+              Loading...
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4 mr-2" />
-              AI Suggest
+              Smart Suggestions
             </>
           )}
         </Button>
@@ -222,9 +223,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                   <div className="flex-1 text-left">
                     <div className="text-xs font-bold text-white flex items-center gap-2">
                       {suggestion.name}
-                      {suggestion.source === 'ai' && (
-                        <span className="text-[8px] bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1.5 py-0.5 rounded-full">AI</span>
-                      )}
                     </div>
                     <div className="text-[10px] text-white/50">{suggestion.reason}</div>
                   </div>

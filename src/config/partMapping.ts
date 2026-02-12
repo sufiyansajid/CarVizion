@@ -24,22 +24,30 @@ export interface ManualPartMapping {
  * Update these arrays based on your model's mesh names
  */
 export const CAR_3D_MAPPING: ManualPartMapping = {
-  body: [
-    // Add mesh names that should be body parts
-    // Example: 'CarBody', 'Door_Left', 'Hood', 'Roof'
-  ],
-  rims: [
-    // Add mesh names that should be rims/wheels
-    // Example: 'Wheel_FL', 'Wheel_FR', 'Wheel_RL', 'Wheel_RR'
-  ],
-  windows: [
-    // Add mesh names that should be windows
-    // Example: 'Window_Front', 'Window_Rear', 'Glass_Side'
-  ],
-  lights: [
-    // Add mesh names that should be lights
-    // Example: 'Headlight_L', 'Headlight_R', 'Taillight_L', 'Taillight_R'
-  ],
+  body: [],
+  rims: [],
+  windows: [],
+  lights: [],
+};
+
+export const MCLAREN_MAPPING: ManualPartMapping = {
+  body: [],
+  rims: [],
+  windows: [],
+  lights: []
+};
+
+export const PORSCHE_MAPPING: ManualPartMapping = {
+  body: [],
+  rims: [],
+  windows: [],
+  lights: []
+};
+
+export const MODEL_MAPPINGS: Record<string, ManualPartMapping> = {
+  'standard': CAR_3D_MAPPING,
+  'sport': MCLAREN_MAPPING,
+  'honda_city': CAR_3D_MAPPING,
 };
 
 /**
