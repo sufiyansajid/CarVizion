@@ -260,5 +260,10 @@ export function parseVoiceCommand(transcript: string) {
     }
   }
 
+  // Reset Command
+  if (lower.includes('reset') || lower.includes('start over') || lower.includes('clear design')) {
+    return { action: 'resetDesign', value: true };
+  }
+
   return null;
 }

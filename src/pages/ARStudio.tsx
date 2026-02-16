@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
+import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,8 @@ import {
   Loader2,
   Mic,
   MicOff,
+  Car,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +51,8 @@ import type { ColorSuggestion } from "@/utils/colorAI";
 import VerticalToolbar from "@/components/VerticalToolbar";
 import { getDesignCritique } from "@/utils/designCritic";
 import type { DesignState } from "@/utils/designCritic";
+import { FeedbackModal } from "@/components/FeedbackModal";
+import { ActivityLog, type LogEntry } from "@/components/ActivityLog";
 
 // Loading fallback for lazy components
 const StudioLoadingFallback = () => (
@@ -221,6 +225,39 @@ const ARStudio = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModel.id]);
 
+  // --- ACTIVITY LOG STATE ---
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const lastLoggedRef = useRef<{ type: string, message: string, time: number } | null>(null);
+
+  const addLog = (type: "system" | "color" | "part" | "navigation" | "voice", message: string) => {
+    const now = Date.now();
+    // Deduplicate: If same message & type within 2 seconds, ignore
+    if (
+      lastLoggedRef.current &&
+      lastLoggedRef.current.type === type &&
+      lastLoggedRef.current.message === message &&
+      now - lastLoggedRef.current.time < 2000
+    ) {
+      return;
+    }
+
+    lastLoggedRef.current = { type, message, time: now };
+
+    setLogs((prev) => [
+      ...prev.slice(-19), // Keep last 20 logs
+      {
+        id: Math.random().toString(36).substring(7),
+        time: new Date(),
+        type,
+        message,
+        context: activeTab, // Capture current context
+      },
+    ]);
+  };
+
+  // REMOVED "Loaded Model" LOG
+  // REMOVED "Switched Tab" LOG
+
   // Keyboard shortcuts
   useKeyboardShortcuts({
     'ctrl+s': () => {
@@ -247,39 +284,64 @@ const ARStudio = () => {
       case 'setBodyColor':
         setBodyColor(parsed.value as string);
         toast.success(`Body color changed to ${parsed.colorName}`);
+        addLog("voice", `Voice: Paint body ${parsed.colorName}`);
         break;
       case 'setRimColor':
         setRimColor(parsed.value as string);
         toast.success(`Rim color changed to ${parsed.colorName}`);
+        addLog("voice", `Voice: Paint rims ${parsed.colorName}`);
         break;
       case 'setUnderglowColor':
         setUnderglowColor(parsed.value as string);
         setUnderglowIntensity(1);
         toast.success(`Underglow color changed to ${parsed.colorName}`);
+        addLog("voice", `Voice: Set underglow ${parsed.colorName}`);
         break;
       case 'showSpoiler':
         setShowSpoiler(parsed.value as boolean);
         toast.success(parsed.value ? 'Spoiler added' : 'Spoiler removed');
+        addLog("voice", `Voice: ${parsed.value ? 'Added' : 'Removed'} spoiler`);
         break;
       case 'setTab':
         setActiveTab(parsed.value as string);
         toast.success(`Switched to ${(parsed.value as string).toUpperCase()} studio`);
+        addLog("voice", `Voice: Switch to ${parsed.value}`);
         break;
       case 'saveDesign':
         setSaveDialogOpen(true);
         toast.success('Opening save dialog');
+        addLog("voice", "Voice: Save design");
         break;
       case 'setRimStyle':
         setRimStyle(parsed.value as "sport" | "classic" | "mesh" | "deepdish" | "stock");
         toast.success(`Rim style changed to ${parsed.value}`);
+        addLog("voice", `Voice: Rim style ${parsed.value}`);
         break;
       case 'setWindowTint':
         setWindowTint(parsed.value as number);
         toast.success(`Window tint adjusted`);
+        addLog("voice", "Voice: Adjust tint");
         break;
       case 'setHeadlightColor':
         setHeadlightColor(parsed.value as string);
         toast.success(`Headlights updated`);
+        addLog("voice", "Voice: Headlights updated");
+        break;
+      case 'resetDesign':
+        setBodyColor(undefined);
+        setRimColor(undefined);
+        setWindowTint(0);
+        setUnderglowIntensity(0);
+        setHeadlightColor(undefined);
+        setTaillightColor(undefined);
+        setShowSpoiler(false);
+        setRimStyle('stock');
+        setDecalUrl(undefined);
+        setWrapType(undefined);
+        setTwoDBodyColor(undefined);
+        setTwoDRimColor(undefined);
+        toast.success("Design reset to stock! 🔄");
+        addLog("voice", "Voice: Reset design");
         break;
     }
   }, []);
@@ -319,6 +381,7 @@ const ARStudio = () => {
   const handleUpdateValue = (value: string, isMaterial?: boolean, met?: number, roug?: number) => {
     if (activeTab === "2d") {
       setTwoDToolValue(value);
+      addLog("color", `Changed 2D ${selectedTool} to ${value}`);
     } else {
       switch (selectedTool) {
         case "paint":
@@ -327,13 +390,33 @@ const ARStudio = () => {
             setMetalness(met || 0.3);
             setRoughness(roug || 0.4);
           }
+          addLog("color", `Painted body ${value}`);
           break;
-        case "rims": setRimColor(value); break;
-        case "windowtint": setWindowTint(parseFloat(value)); break;
-        case "headlights": setHeadlightColor(value); break;
-        case "underglow": setUnderglowColor(value); break;
-        case "wraps": setWrapType(value); break;
-        case "rimstyle": setRimStyle(value as "sport" | "classic" | "mesh" | "deepdish" | "stock"); break;
+        case "rims": 
+          setRimColor(value); 
+          addLog("color", `Painted rims ${value}`);
+          break;
+        case "windowtint": 
+          const tintVal = parseFloat(value);
+          setWindowTint(tintVal); 
+          addLog("part", `Set window tint to ${tintVal * 100}%`);
+          break;
+        case "headlights": 
+          setHeadlightColor(value); 
+          addLog("color", `Changed headlights to ${value}`);
+          break;
+        case "underglow": 
+          setUnderglowColor(value); 
+          addLog("color", `Set underglow to ${value}`);
+          break;
+        case "wraps": 
+          setWrapType(value); 
+          addLog("part", `Applied wrap: ${value}`);
+          break;
+        case "rimstyle": 
+          setRimStyle(value as "sport" | "classic" | "mesh" | "deepdish" | "stock"); 
+          addLog("part", `Equipped ${value} rims`);
+          break;
       }
     }
   };
@@ -464,6 +547,9 @@ const ARStudio = () => {
                         {isListening ? "Listening..." : "Voice Control"}
                       </Button>
                     )}
+
+                    {/* Feedback Button */}
+                    <FeedbackModal />
 
                     {activeTab === "3d" && (
                       <>
@@ -685,6 +771,13 @@ const ARStudio = () => {
             </div>
           </Tabs>
         </div>
+        
+        {/* Activity Log Overlay */}
+        <div className="hidden xl:block absolute bottom-6 left-6 z-50 animate-in slide-in-from-left-10 duration-500 pointer-events-none">
+           <div className="pointer-events-auto">
+             <ActivityLog logs={logs} activeTab={activeTab} />
+           </div>
+        </div>
 
         {/* Vertical Icon Toolbar - RIGHT SIDE - Desktop only */}
         <div className="hidden lg:flex flex-shrink-0 gap-0">
@@ -851,7 +944,10 @@ const ARStudio = () => {
                     <ColorPicker
                       label="Taillight Color"
                       color={taillightColor || "#ff0000"}
-                      onChange={setTaillightColor}
+                      onChange={(c) => {
+                        setTaillightColor(c);
+                        addLog("color", `Changed taillights to ${c}`);
+                      }}
                     />
                   </div>
                 )}
@@ -899,7 +995,11 @@ const ARStudio = () => {
                         <div className="flex items-center justify-between mb-4">
                           <Label className="text-sm font-medium">Show Spoiler</Label>
                           <Button size="sm" variant={showSpoiler ? "default" : "outline"}
-                            onClick={() => setShowSpoiler(!showSpoiler)}>
+                            onClick={() => {
+                              const newState = !showSpoiler;
+                              setShowSpoiler(newState);
+                              addLog("part", `Spoiler ${newState ? "Enabled" : "Disabled"}`);
+                            }}>
                             {showSpoiler ? "ON" : "OFF"}
                           </Button>
                         </div>
@@ -915,7 +1015,10 @@ const ARStudio = () => {
                               ].map(s => (
                                 <button
                                   key={s.value}
-                                  onClick={() => setSpoilerStyle(s.value)}
+                                  onClick={() => {
+                                    setSpoilerStyle(s.value);
+                                    addLog("part", `Equipped ${s.label} spoiler`);
+                                  }}
                                   className={cn(
                                     "relative p-3 rounded-lg border-2 transition-all hover:scale-105",
                                     spoilerStyle === s.value
@@ -960,8 +1063,10 @@ const ARStudio = () => {
                             const url = `/decals/${d.path}.svg`;
                             if (activeTab === "2d") {
                               setDecalUrl(url);
+                              addLog("part", `Applied 2D decal: ${d.name}`);
                             } else {
                               setDecalUrl(url);
+                              addLog("part", `Applied decal: ${d.name}`);
                             }
                           }}
                           className={cn(
@@ -985,7 +1090,10 @@ const ARStudio = () => {
                       ))}
                     </div>
                     <Button size="sm" variant="outline" className="w-full mt-3"
-                      onClick={() => setDecalUrl(undefined)}>
+                      onClick={() => {
+                        setDecalUrl(undefined);
+                        addLog("part", "Removed decal");
+                      }}>
                       Clear Decal
                     </Button>
                   </div>
