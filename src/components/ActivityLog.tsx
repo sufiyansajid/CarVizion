@@ -83,8 +83,8 @@ export function ActivityLog({ logs, activeTab, className }: ActivityLogProps) {
             </div>
         </div>
         
-        <ScrollArea className="flex-1 p-2" ref={scrollRef}>
-            <div className="space-y-1.5">
+        <ScrollArea className="flex-1 p-2 h-full w-full" ref={scrollRef}>
+            <div className="space-y-1.5 pr-2">
             <AnimatePresence initial={false}>
                 {filteredLogs.length === 0 && (
                     <div className="text-muted-foreground text-xs text-center py-8 italic opacity-50">
@@ -101,7 +101,7 @@ export function ActivityLog({ logs, activeTab, className }: ActivityLogProps) {
                     className="group flex items-start gap-2 text-xs p-1.5 rounded hover:bg-white/5 transition-colors"
                 >
                     <span className="text-muted-foreground/50 font-mono text-[10px] whitespace-nowrap mt-0.5">
-                    {log.time.toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    {new Date(log.time).toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                     </span>
                     
                     <div className="flex-1 min-w-0">

@@ -834,7 +834,15 @@ const ARStudio = () => {
                     <div className="grid grid-cols-2 gap-2">
                       {wrapOptions.map((w, i) => (
                         <Button key={i} variant={wrapType === w ? "default" : "secondary"} 
-                          size="sm" onClick={() => setWrapType(w)} className="w-full">
+                          size="sm" onClick={() => {
+                            if (activeTab === "2d") {
+                                setTwoDWrapType(w);
+                                addLog("part", `Applied 2D wrap: ${w}`);
+                            } else {
+                                setWrapType(w);
+                                addLog("part", `Applied wrap: ${w}`);
+                            }
+                          }} className="w-full">
                           {w}
                         </Button>
                       ))}
@@ -859,8 +867,13 @@ const ARStudio = () => {
                           <button
                             key={style.value}
                             onClick={() => {
-                              if (activeTab === "2d") setTwoDRimStyle(style.value);
-                              else setRimStyle(style.value);
+                              if (activeTab === "2d") {
+                                setTwoDRimStyle(style.value);
+                                addLog("part", `Changed 2D rim style to ${style.label}`);
+                              } else {
+                                setRimStyle(style.value);
+                                addLog("part", `Equipped ${style.label} rims`);
+                              }
                             }}
                             className={cn(
                               "relative p-3 rounded-lg border-2 transition-all hover:scale-105",
@@ -888,7 +901,15 @@ const ARStudio = () => {
                     <ColorPicker
                       label="Rim Color"
                       color={(activeTab === "2d" ? twoDRimColor : rimColor) || "#ffffff"}
-                      onChange={(c) => handleUpdateValue(c)}
+                      onChange={(c) => {
+                        if (activeTab === "2d") {
+                            setTwoDRimColor(c);
+                            addLog("color", `Painted 2D rims ${c}`);
+                        } else {
+                            setRimColor(c);
+                            addLog("color", `Painted rims ${c}`);
+                        }
+                      }}
                       carModelName={selectedModel.name}
                       onApplySuggestion={(suggestion: ColorSuggestion) => {
                         if (activeTab === "2d") {
@@ -912,7 +933,16 @@ const ARStudio = () => {
                       {tintOptions.map((t, idx) => (
                         <Button key={t} size="sm" 
                           variant={windowTint === idx * 0.25 ? "default" : "outline"}
-                          onClick={() => setWindowTint(idx * 0.25)} className="w-full">
+                          onClick={() => {
+                            const val = idx * 0.25;
+                            if (activeTab === "2d") {
+                                setTwoDWindowTint(val);
+                                addLog("part", `Set 2D tint to ${val * 100}%`);
+                            } else {
+                                setWindowTint(val);
+                                addLog("part", `Set window tint to ${val * 100}%`);
+                            }
+                          }} className="w-full">
                           {t}
                         </Button>
                       ))}
@@ -928,7 +958,16 @@ const ARStudio = () => {
                       {lightOptions.map(l => (
                         <Button key={l} size="sm" 
                           variant={headlightColor === (l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff") ? "default" : "outline"}
-                          onClick={() => setHeadlightColor(l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff")}
+                          onClick={() => {
+                            const val = l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff";
+                             if (activeTab === "2d") {
+                                setTwoDHeadlightColor(val);
+                                addLog("color", `Changed 2D headlights to ${l}`);
+                            } else {
+                                setHeadlightColor(val);
+                                addLog("color", `Changed headlights to ${l}`);
+                            }
+                          }}
                           className="w-full">
                           {l}
                         </Button>
