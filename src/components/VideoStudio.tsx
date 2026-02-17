@@ -21,7 +21,7 @@ interface VideoStudioProps {
 
 const TOOL_MODELS: Record<string, string[]> = {
   paint: [],
-  bumpers: ["/models/bumper2.glb", "/models/bumper3.glb", "/models/bumper4.glb"],
+  bumpers: ["/models/bumper2.glb"],
   spoilers: ["/models/universal_spoiler_1.glb", "/models/spoiler2.glb"],
   rims: [
     "/models/rim.glb",
