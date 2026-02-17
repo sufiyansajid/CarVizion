@@ -1,5 +1,5 @@
 import { useGLTF } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+// import { useFrame } from "@react-three/fiber";
 import { useMemo, forwardRef, useEffect } from "react";
 import * as THREE from "three";
 
@@ -31,8 +31,28 @@ export const ARModel = forwardRef<THREE.Group, ARModelProps>(({
 }, ref) => {
     const { scene } = useGLTF(modelPath);
 
+    const clonedScene = useMemo(() => {
+        const clone = scene.clone();
 
-    const clonedScene = useMemo(() => scene.clone(), [scene]);
+        // Auto-center and normalize scale
+        const box = new THREE.Box3().setFromObject(clone);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        clone.position.sub(center); // Center the model
+
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const maxDim = Math.max(size.x, size.y, size.z);
+
+        // Scale to a standard 1.5m unit if it's too big or small
+        if (maxDim > 0) {
+            const targetSize = 1.5;
+            const scaleFactor = targetSize / maxDim;
+            clone.scale.multiplyScalar(scaleFactor);
+        }
+
+        return clone;
+    }, [scene]);
 
     // Apply color based on partType
     useEffect(() => {
@@ -50,18 +70,14 @@ export const ARModel = forwardRef<THREE.Group, ARModelProps>(({
                     mat.metalnessMap = null;
                     mat.roughnessMap = null;
                     mat.color = new THREE.Color(color);
-                    mat.metalness = partType === 'rim' ? 0.8 : 0.3;
-                    mat.roughness = partType === 'rim' ? 0.2 : 0.5;
+                    mat.metalness = partType === 'rim' ? 0.8 : 0.4;
+                    mat.roughness = partType === 'rim' ? 0.2 : 0.3;
                     mat.needsUpdate = true;
                     mesh.material = mat;
                 }
             }
         });
     }, [clonedScene, bodyColor, rimColor, partType]);
-
-    useFrame(() => {
-        // Any animations can go here
-    });
 
     return (
         <group

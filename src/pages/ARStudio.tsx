@@ -188,7 +188,7 @@ const ARStudio = () => {
   // Sync current selection to profile
   useEffect(() => {
     if (isSyncing || !selectedModel?.id) return;
-    
+
     setDesignProfiles(prev => ({
       ...prev,
       [selectedModel.id]: {
@@ -203,7 +203,7 @@ const ARStudio = () => {
   useEffect(() => {
     const profile = designProfiles[selectedModel.id];
     setIsSyncing(true);
-    
+
     // Ensure we are not on an SUV for spoilers
     const canHaveSpoiler = selectedModel.type !== 'suv';
 
@@ -239,7 +239,7 @@ const ARStudio = () => {
       setDecalUrl(undefined);
       setWrapType(undefined);
     }
-    
+
     const timer = setTimeout(() => setIsSyncing(false), 100);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -517,29 +517,29 @@ const ARStudio = () => {
           }
           addLog("color", `Painted body ${value}`);
           break;
-        case "rims": 
-          setRimColor(value); 
+        case "rims":
+          setRimColor(value);
           addLog("color", `Painted rims ${value}`);
           break;
-        case "windowtint": 
+        case "windowtint":
           const tintVal = parseFloat(value);
-          setWindowTint(tintVal); 
+          setWindowTint(tintVal);
           addLog("part", `Set window tint to ${tintVal * 100}%`);
           break;
-        case "headlights": 
-          setHeadlightColor(value); 
+        case "headlights":
+          setHeadlightColor(value);
           addLog("color", `Changed headlights to ${value}`);
           break;
-        case "underglow": 
-          setUnderglowColor(value); 
+        case "underglow":
+          setUnderglowColor(value);
           addLog("color", `Set underglow to ${value}`);
           break;
-        case "wraps": 
-          setWrapType(value); 
+        case "wraps":
+          setWrapType(value);
           addLog("part", `Applied wrap: ${value}`);
           break;
-        case "rimstyle": 
-          setRimStyle(value as "sport" | "classic" | "mesh" | "deepdish" | "stock"); 
+        case "rimstyle":
+          setRimStyle(value as "sport" | "classic" | "mesh" | "deepdish" | "stock");
           addLog("part", `Equipped ${value} rims`);
           break;
       }
@@ -559,7 +559,7 @@ const ARStudio = () => {
       decalUrl: decalUrl,
       // ... 3D states
     };
-    
+
     const review = getDesignCritique(currentState);
     setDesignReview(review);
     toast.success("AI Design Review Generated Locally!");
@@ -674,176 +674,176 @@ const ARStudio = () => {
               <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                 Studio
               </CardTitle>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 overflow-x-auto max-w-full">
-                    {/* Voice Control Button - FREE FEATURE! */}
-                    {isSupported && (
-                      <Button
-                        variant={isListening ? "default" : "outline"}
-                        size="sm"
-                        onClick={toggleListening}
-                        title="Voice control: Say commands like 'change color to red'"
-                        className={cn("text-xs sm:text-sm", isListening ? "animate-pulse" : "")}
-                      >
-                        {isListening ? <Mic className="w-4 h-4 sm:mr-1" /> : <MicOff className="w-4 h-4 sm:mr-1" />}
-                        <span className="hidden sm:inline">{isListening ? "Listening..." : "Voice"}</span>
-                      </Button>
-                    )}
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 overflow-x-auto max-w-full">
+                {/* Voice Control Button - FREE FEATURE! */}
+                {isSupported && (
+                  <Button
+                    variant={isListening ? "default" : "outline"}
+                    size="sm"
+                    onClick={toggleListening}
+                    title="Voice control: Say commands like 'change color to red'"
+                    className={cn("text-xs sm:text-sm", isListening ? "animate-pulse" : "")}
+                  >
+                    {isListening ? <Mic className="w-4 h-4 sm:mr-1" /> : <MicOff className="w-4 h-4 sm:mr-1" />}
+                    <span className="hidden sm:inline">{isListening ? "Listening..." : "Voice"}</span>
+                  </Button>
+                )}
 
-                    {/* Feedback Button */}
-                    <FeedbackModal />
+                {/* Feedback Button */}
+                <FeedbackModal />
 
-                    {activeTab === "3d" && (
-                      <>
-                        <Button
-                          variant={debugMode ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setDebugMode(!debugMode)}
-                          title="Debug mode: Color-code parts"
-                          className="text-xs sm:text-sm"
-                        >
-                          <SlidersHorizontal className="w-4 h-4 sm:mr-1" />
-                          <span className="hidden sm:inline">{debugMode ? "Debug ON" : "Debug OFF"}</span>
+                {activeTab === "3d" && (
+                  <>
+                    <Button
+                      variant={debugMode ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setDebugMode(!debugMode)}
+                      title="Debug mode: Color-code parts"
+                      className="text-xs sm:text-sm"
+                    >
+                      <SlidersHorizontal className="w-4 h-4 sm:mr-1" />
+                      <span className="hidden sm:inline">{debugMode ? "Debug ON" : "Debug OFF"}</span>
+                    </Button>
+
+                    {/* Car Selection */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                          <Car className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Garage</span>
                         </Button>
-
-                        {/* Car Selection */}
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                              <Car className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Garage</span>
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[80vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
-                                <Car className="w-5 h-5 text-primary" />
-                                Select Your Vehicle
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 max-h-[60vh] overflow-y-auto pr-2">
-                              {isLoadingModels ? (
-                                <div className="col-span-full py-12 flex flex-col items-center justify-center gap-3">
-                                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                  <p className="text-muted-foreground font-medium">Loading vehicles...</p>
-                                </div>
-                              ) : carModels.map((car: CarModelConfig) => {
-                                const typeBadge = getCarTypeBadge(car.type);
-                                return (
-                                  <div
-                                    key={car.id}
-                                    className={cn(
-                                      "cursor-pointer rounded-xl border-2 p-4 transition-all hover:scale-[1.02] hover:shadow-lg",
-                                      selectedModel.id === car.id
-                                        ? "border-primary bg-primary/5 shadow-md"
-                                        : "border-muted hover:border-primary/50"
-                                    )}
-                                    onClick={() => {
-                                      setSelectedModel(car);
-                                      toast.success(`Switched to ${car.name}`);
-                                    }}
-                                  >
-                                    <div className="aspect-video rounded-lg bg-gradient-to-br from-secondary to-muted mb-3 flex items-center justify-center relative overflow-hidden group">
-                                      {car.thumbnail ? (
-                                        <img
-                                          src={car.thumbnail}
-                                          alt={car.name}
-                                          className="w-full h-full object-cover"
-                                          onError={(e) => {
-                                            e.currentTarget.style.display = 'none';
-                                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                                          }}
-                                        />
-                                      ) : null}
-                                      <div className={cn("flex items-center justify-center", car.thumbnail ? "hidden" : "")}>
-                                        <Car className="w-12 h-12 text-muted-foreground group-hover:text-primary transition-colors" />
-                                      </div>
-                                      {selectedModel.id === car.id && (
-                                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                                          <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                            <polyline points="20 6 9 17 4 12" />
-                                          </svg>
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center justify-between mb-1">
-                                      <h3 className="font-bold text-foreground">{car.name}</h3>
-                                      <Badge variant="secondary" className={typeBadge.className}>
-                                        {typeBadge.label}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground line-clamp-2">{car.description}</p>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <Car className="w-5 h-5 text-primary" />
+                            Select Your Vehicle
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 max-h-[60vh] overflow-y-auto pr-2">
+                          {isLoadingModels ? (
+                            <div className="col-span-full py-12 flex flex-col items-center justify-center gap-3">
+                              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                              <p className="text-muted-foreground font-medium">Loading vehicles...</p>
+                            </div>
+                          ) : carModels.map((car: CarModelConfig) => {
+                            const typeBadge = getCarTypeBadge(car.type);
+                            return (
+                              <div
+                                key={car.id}
+                                className={cn(
+                                  "cursor-pointer rounded-xl border-2 p-4 transition-all hover:scale-[1.02] hover:shadow-lg",
+                                  selectedModel.id === car.id
+                                    ? "border-primary bg-primary/5 shadow-md"
+                                    : "border-muted hover:border-primary/50"
+                                )}
+                                onClick={() => {
+                                  setSelectedModel(car);
+                                  toast.success(`Switched to ${car.name}`);
+                                }}
+                              >
+                                <div className="aspect-video rounded-lg bg-gradient-to-br from-secondary to-muted mb-3 flex items-center justify-center relative overflow-hidden group">
+                                  {car.thumbnail ? (
+                                    <img
+                                      src={car.thumbnail}
+                                      alt={car.name}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div className={cn("flex items-center justify-center", car.thumbnail ? "hidden" : "")}>
+                                    <Car className="w-12 h-12 text-muted-foreground group-hover:text-primary transition-colors" />
                                   </div>
-                                );
-                              })}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-        
-                        {/* Save Design Dialog */}
-                        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button variant="default" title="Save Design (Ctrl+S)" size="sm" className="text-xs sm:text-sm">
-                              <Save className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Save Design</span>
-                              <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-primary-foreground/20 rounded hidden md:inline">⌘S</kbd>
+                                  {selectedModel.id === car.id && (
+                                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className="font-bold text-foreground">{car.name}</h3>
+                                  <Badge variant="secondary" className={typeBadge.className}>
+                                    {typeBadge.label}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{car.description}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Save Design Dialog */}
+                    <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="default" title="Save Design (Ctrl+S)" size="sm" className="text-xs sm:text-sm">
+                          <Save className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Save Design</span>
+                          <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-primary-foreground/20 rounded hidden md:inline">⌘S</kbd>
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <Save className="w-5 h-5 text-primary" />
+                            Save Your Design
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="designName">Design Name *</Label>
+                            <Input
+                              id="designName"
+                              placeholder="Enter a name for your design"
+                              value={designName}
+                              onChange={(e) => setDesignName(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="designDescription">Description (optional)</Label>
+                            <Input
+                              id="designDescription"
+                              placeholder="Describe your customization"
+                              value={designDescription}
+                              onChange={(e) => setDesignDescription(e.target.value)}
+                            />
+                          </div>
+                          <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                            <p className="font-medium mb-1">Design includes:</p>
+                            <ul className="text-muted-foreground space-y-1">
+                              <li>• Vehicle: {selectedModel.name}</li>
+                              {bodyColor && <li>• Body Color: {bodyColor}</li>}
+                              {rimColor && <li>• Rim Color: {rimColor}</li>}
+                              {wrapType && <li>• Wrap: {wrapType}</li>}
+                              {showSpoiler && <li>• Spoiler: Enabled</li>}
+                            </ul>
+                          </div>
+                          <div className="flex gap-3 pt-2">
+                            <Button
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => setSaveDialogOpen(false)}
+                            >
+                              Cancel
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
-                                <Save className="w-5 h-5 text-primary" />
-                                Save Your Design
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 pt-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="designName">Design Name *</Label>
-                                <Input
-                                  id="designName"
-                                  placeholder="Enter a name for your design"
-                                  value={designName}
-                                  onChange={(e) => setDesignName(e.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="designDescription">Description (optional)</Label>
-                                <Input
-                                  id="designDescription"
-                                  placeholder="Describe your customization"
-                                  value={designDescription}
-                                  onChange={(e) => setDesignDescription(e.target.value)}
-                                />
-                              </div>
-                              <div className="bg-muted/50 rounded-lg p-3 text-sm">
-                                <p className="font-medium mb-1">Design includes:</p>
-                                <ul className="text-muted-foreground space-y-1">
-                                  <li>• Vehicle: {selectedModel.name}</li>
-                                  {bodyColor && <li>• Body Color: {bodyColor}</li>}
-                                  {rimColor && <li>• Rim Color: {rimColor}</li>}
-                                  {wrapType && <li>• Wrap: {wrapType}</li>}
-                                  {showSpoiler && <li>• Spoiler: Enabled</li>}
-                                </ul>
-                              </div>
-                              <div className="flex gap-3 pt-2">
-                                <Button
-                                  variant="outline"
-                                  className="flex-1"
-                                  onClick={() => setSaveDialogOpen(false)}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  className="flex-1"
-                                  onClick={handleSaveDesign}
-                                  disabled={isSaving || !designName.trim()}
-                                >
-                                  {isSaving ? "Saving..." : "Save Design"}
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </>
-                    )}
-                  </div>
+                            <Button
+                              className="flex-1"
+                              onClick={handleSaveDesign}
+                              disabled={isSaving || !designName.trim()}
+                            >
+                              {isSaving ? "Saving..." : "Save Design"}
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                )}
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -913,17 +913,17 @@ const ARStudio = () => {
             </div>
           </Tabs>
         </div>
-        
+
         {/* Activity Log Overlay */}
         <div className="hidden xl:block absolute bottom-6 left-6 z-50 animate-in slide-in-from-left-10 duration-500 pointer-events-none">
-           <div className="pointer-events-auto">
-             <ActivityLog logs={logs} activeTab={activeTab} />
-           </div>
+          <div className="pointer-events-auto">
+            <ActivityLog logs={logs} activeTab={activeTab} />
+          </div>
         </div>
 
         {/* Vertical Icon Toolbar - RIGHT SIDE - Desktop only */}
         <div className="hidden lg:flex flex-shrink-0 gap-0">
-          <VerticalToolbar 
+          <VerticalToolbar
             tools={customizationTools}
             selectedTool={selectedTool}
             onToolSelect={(toolId) => setSelectedTool(selectedTool === toolId ? "" : toolId)}
@@ -968,21 +968,21 @@ const ARStudio = () => {
                     }}
                   />
                 )}
-                
+
                 {/* Wraps Panel */}
                 {selectedTool === "wraps" && (
                   <div>
                     <Label className="text-sm font-medium mb-2 block">Wrap Type</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {wrapOptions.map((w, i) => (
-                        <Button key={i} variant={wrapType === w ? "default" : "secondary"} 
+                        <Button key={i} variant={wrapType === w ? "default" : "secondary"}
                           size="sm" onClick={() => {
                             if (activeTab === "2d") {
-                                setTwoDWrapType(w);
-                                addLog("part", `Applied 2D wrap: ${w}`);
+                              setTwoDWrapType(w);
+                              addLog("part", `Applied 2D wrap: ${w}`);
                             } else {
-                                setWrapType(w);
-                                addLog("part", `Applied wrap: ${w}`);
+                              setWrapType(w);
+                              addLog("part", `Applied wrap: ${w}`);
                             }
                           }} className="w-full">
                           {w}
@@ -995,6 +995,12 @@ const ARStudio = () => {
                 {/* Rims Panel */}
                 {selectedTool === "rims" && (
                   <div className="space-y-4">
+                    {activeTab === "video" && (
+                      <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg mb-4 animate-in slide-in-from-top-2">
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">AR Video Mode</p>
+                        <p className="text-xs text-muted-foreground">Select specific rim models (like the "rim" model) from the <span className="text-foreground font-semibold">Add Part</span> button in the video screen.</p>
+                      </div>
+                    )}
                     {/* Rim Style Selector - Enhanced Visual */}
                     <div>
                       <Label className="text-sm font-medium mb-3 block">Rim Style</Label>
@@ -1045,11 +1051,11 @@ const ARStudio = () => {
                       color={(activeTab === "2d" ? twoDRimColor : rimColor) || "#ffffff"}
                       onChange={(c) => {
                         if (activeTab === "2d") {
-                            setTwoDRimColor(c);
-                            addLog("color", `Painted 2D rims ${c}`);
+                          setTwoDRimColor(c);
+                          addLog("color", `Painted 2D rims ${c}`);
                         } else {
-                            setRimColor(c);
-                            addLog("color", `Painted rims ${c}`);
+                          setRimColor(c);
+                          addLog("color", `Painted rims ${c}`);
                         }
                       }}
                       carModelName={selectedModel.name}
@@ -1073,16 +1079,16 @@ const ARStudio = () => {
                     <Label className="text-sm font-medium mb-2 block">Window Tint</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {tintOptions.map((t, idx) => (
-                        <Button key={t} size="sm" 
+                        <Button key={t} size="sm"
                           variant={windowTint === idx * 0.25 ? "default" : "outline"}
                           onClick={() => {
                             const val = idx * 0.25;
                             if (activeTab === "2d") {
-                                setTwoDWindowTint(val);
-                                addLog("part", `Set 2D tint to ${val * 100}%`);
+                              setTwoDWindowTint(val);
+                              addLog("part", `Set 2D tint to ${val * 100}%`);
                             } else {
-                                setWindowTint(val);
-                                addLog("part", `Set window tint to ${val * 100}%`);
+                              setWindowTint(val);
+                              addLog("part", `Set window tint to ${val * 100}%`);
                             }
                           }} className="w-full">
                           {t}
@@ -1098,16 +1104,16 @@ const ARStudio = () => {
                     <Label className="text-sm font-medium mb-2 block">Headlight Color</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {lightOptions.map(l => (
-                        <Button key={l} size="sm" 
+                        <Button key={l} size="sm"
                           variant={headlightColor === (l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff") ? "default" : "outline"}
                           onClick={() => {
                             const val = l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff";
-                             if (activeTab === "2d") {
-                                setTwoDHeadlightColor(val);
-                                addLog("color", `Changed 2D headlights to ${l}`);
+                            if (activeTab === "2d") {
+                              setTwoDHeadlightColor(val);
+                              addLog("color", `Changed 2D headlights to ${l}`);
                             } else {
-                                setHeadlightColor(val);
-                                addLog("color", `Changed headlights to ${l}`);
+                              setHeadlightColor(val);
+                              addLog("color", `Changed headlights to ${l}`);
                             }
                           }}
                           className="w-full">
@@ -1150,11 +1156,11 @@ const ARStudio = () => {
                           <Label className="text-xs">Intensity</Label>
                           <span className="text-xs font-mono">{Math.round(underglowIntensity * 100)}%</span>
                         </div>
-                        <input 
-                          type="range" 
-                          min="0" 
-                          max="2" 
-                          step="0.1" 
+                        <input
+                          type="range"
+                          min="0"
+                          max="2"
+                          step="0.1"
                           value={underglowIntensity}
                           onChange={(e) => setUnderglowIntensity(parseFloat(e.target.value))}
                           className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
@@ -1173,6 +1179,12 @@ const ARStudio = () => {
                       </div>
                     ) : (
                       <>
+                        {activeTab === "video" && (
+                          <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg mb-4 animate-in slide-in-from-top-2">
+                            <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">AR Video Mode</p>
+                            <p className="text-xs text-muted-foreground">Select spoiler models from the <span className="text-foreground font-semibold">Add Part</span> button in the video screen.</p>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mb-4">
                           <Label className="text-sm font-medium">Show Spoiler</Label>
                           <Button size="sm" variant={showSpoiler ? "default" : "outline"}
@@ -1286,7 +1298,7 @@ const ARStudio = () => {
                     <Shield className="w-8 h-8 mx-auto mb-2 text-primary/50" />
                     <p className="text-sm font-medium">Bumper Selection</p>
                     <p className="text-xs text-muted-foreground mt-1 text-balance">
-                      Please select specific bumper styles from the studio view controls.
+                      Please select bumper models from the <span className="text-foreground font-semibold">Add Part</span> button in the video screen.
                     </p>
                   </div>
                 )}
