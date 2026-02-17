@@ -12,13 +12,41 @@ interface VerticalToolbarProps {
   tools: ToolbarItem[];
   selectedTool: string;
   onToolSelect: (toolId: string) => void;
+  horizontal?: boolean;
 }
 
 const VerticalToolbar: React.FC<VerticalToolbarProps> = ({
   tools,
   selectedTool,
   onToolSelect,
+  horizontal = false,
 }) => {
+  if (horizontal) {
+    return (
+      <div className="flex-shrink-0 w-full bg-card/95 backdrop-blur-sm border-t border-border flex items-center px-2 py-2 gap-1.5 overflow-x-auto scrollbar-hide">
+        {tools.map((tool) => (
+          <button
+            key={tool.id}
+            onClick={() => onToolSelect(tool.id === selectedTool ? "" : tool.id)}
+            className={cn(
+              "relative flex-shrink-0 w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-200",
+              selectedTool === tool.id
+                ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
+                : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+            aria-label={tool.name}
+            title={tool.name}
+          >
+            <tool.icon className="w-5 h-5" />
+            {selectedTool === tool.id && (
+              <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-6 bg-primary rounded-b-full" />
+            )}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="flex-shrink-0 w-20 bg-card/95 backdrop-blur-sm border-r border-border flex flex-col items-center py-6 gap-3 min-h-[calc(100vh-12rem)]">
       {tools.map((tool) => (

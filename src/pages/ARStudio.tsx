@@ -1,6 +1,12 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -85,6 +91,14 @@ const ARStudio = () => {
   const [carModels, setCarModels] = useState<CarModelConfig[]>(CAR_MODELS);
   const [selectedModel, setSelectedModel] = useState(CAR_MODELS[0]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
+
+  // Mobile detection for Sheet visibility
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch models from backend
   useEffect(() => {
@@ -533,7 +547,7 @@ const ARStudio = () => {
               <CardTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                 Studio
               </CardTitle>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 overflow-x-auto max-w-full">
                     {/* Voice Control Button - FREE FEATURE! */}
                     {isSupported && (
                       <Button
@@ -707,7 +721,7 @@ const ARStudio = () => {
         </Card>
       </div>
 
-      <div className="w-full flex gap-0 overflow-hidden">
+      <div className="w-full flex gap-0 overflow-hidden relative pb-16 lg:pb-0">
 
         {/* Main Content Area (Tabs) - Full width */}
         <div className="flex-1 min-w-0">
@@ -1155,6 +1169,339 @@ const ARStudio = () => {
           )}
         </div>
 
+        {/* ===== MOBILE TOOLBAR (< lg screens) ===== */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+          <VerticalToolbar
+            tools={customizationTools}
+            selectedTool={selectedTool}
+            onToolSelect={(toolId) => setSelectedTool(selectedTool === toolId ? "" : toolId)}
+            horizontal
+          />
+        </div>
+
+        {/* ===== MOBILE TOOL OPTIONS SHEET ===== */}
+        <Sheet open={!!selectedTool && isMobile} onOpenChange={(open) => { if (!open) setSelectedTool(""); }}>
+          <SheetContent side="bottom" className="lg:hidden max-h-[70vh] overflow-y-auto rounded-t-2xl">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                {React.createElement(customizationTools.find(t => t.id === selectedTool)?.icon || Box, { className: "w-5 h-5 text-primary" })}
+                {customizationTools.find(t => t.id === selectedTool)?.name}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="space-y-3 pt-4">
+              {/* Paint Panel */}
+              {selectedTool === "paint" && (
+                <ColorPicker
+                  label="Body Paint"
+                  color={(activeTab === "2d" ? twoDBodyColor : bodyColor) || "#ff5e1a"}
+                  onChange={(c) => handleUpdateValue(c)}
+                  carModelName={selectedModel.name}
+                  onMaterialChange={(m, r) => {
+                    if (activeTab === "3d") {
+                      setMetalness(m);
+                      setRoughness(r);
+                    }
+                  }}
+                  onApplySuggestion={(suggestion: ColorSuggestion) => {
+                    if (activeTab === "2d") {
+                      setTwoDBodyColor(suggestion.colors.body);
+                      setTwoDRimColor(suggestion.colors.rims);
+                    } else {
+                      setBodyColor(suggestion.colors.body);
+                      setRimColor(suggestion.colors.rims);
+                    }
+                    toast.success(`Applied: ${suggestion.name} 🎨`);
+                  }}
+                />
+              )}
+
+              {/* Wraps Panel */}
+              {selectedTool === "wraps" && (
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Wrap Type</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {wrapOptions.map((w, i) => (
+                      <Button key={i} variant={wrapType === w ? "default" : "secondary"}
+                        size="sm" onClick={() => {
+                          if (activeTab === "2d") {
+                            setTwoDWrapType(w);
+                            addLog("part", `Applied 2D wrap: ${w}`);
+                          } else {
+                            setWrapType(w);
+                            addLog("part", `Applied wrap: ${w}`);
+                          }
+                        }} className="w-full">
+                        {w}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Rims Panel */}
+              {selectedTool === "rims" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium mb-3 block">Rim Style</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: 'stock', label: 'Stock', emoji: '🚗', desc: 'Factory' },
+                        { value: 'concept', label: 'Concept', emoji: '💫', desc: 'Futuristic' },
+                        { value: 'sport_v2', label: 'Sport Pro', emoji: '🔥', desc: 'Racing' },
+                        { value: 'test_rim_2', label: 'Test 2', emoji: '🧪', desc: 'Check 2' },
+                        { value: 'test_rim_3', label: 'Test 3', emoji: '🧪', desc: 'Check 3' },
+                      ].map((style) => (
+                        <button
+                          key={style.value}
+                          onClick={() => {
+                            if (activeTab === "2d") {
+                              setTwoDRimStyle(style.value);
+                              addLog("part", `Changed 2D rim style to ${style.label}`);
+                            } else {
+                              setRimStyle(style.value);
+                              addLog("part", `Equipped ${style.label} rims`);
+                            }
+                          }}
+                          className={cn(
+                            "relative p-2 rounded-lg border-2 transition-all",
+                            (activeTab === "2d" ? twoDRimStyle : rimStyle) === style.value
+                              ? "border-primary bg-primary/10 shadow-lg"
+                              : "border-border bg-card hover:border-primary/50"
+                          )}
+                        >
+                          <div className="text-2xl mb-0.5">{style.emoji}</div>
+                          <div className="font-semibold text-xs">{style.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <ColorPicker
+                    label="Rim Color"
+                    color={(activeTab === "2d" ? twoDRimColor : rimColor) || "#ffffff"}
+                    onChange={(c) => {
+                      if (activeTab === "2d") {
+                        setTwoDRimColor(c);
+                        addLog("color", `Painted 2D rims ${c}`);
+                      } else {
+                        setRimColor(c);
+                        addLog("color", `Painted rims ${c}`);
+                      }
+                    }}
+                    carModelName={selectedModel.name}
+                    onApplySuggestion={(suggestion: ColorSuggestion) => {
+                      if (activeTab === "2d") {
+                        setTwoDRimColor(suggestion.colors.rims);
+                        setTwoDBodyColor(suggestion.colors.body);
+                      } else {
+                        setRimColor(suggestion.colors.rims);
+                        setBodyColor(suggestion.colors.body);
+                      }
+                      toast.success(`Applied: ${suggestion.name} 🎨`);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Window Tint Panel */}
+              {selectedTool === "windowtint" && (
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Window Tint</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {tintOptions.map((t, idx) => (
+                      <Button key={t} size="sm"
+                        variant={windowTint === idx * 0.25 ? "default" : "outline"}
+                        onClick={() => {
+                          const val = idx * 0.25;
+                          if (activeTab === "2d") {
+                            setTwoDWindowTint(val);
+                            addLog("part", `Set 2D tint to ${val * 100}%`);
+                          } else {
+                            setWindowTint(val);
+                            addLog("part", `Set window tint to ${val * 100}%`);
+                          }
+                        }} className="w-full">
+                        {t}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Headlights Panel */}
+              {selectedTool === "headlights" && (
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Headlight Color</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {lightOptions.map(l => (
+                      <Button key={l} size="sm"
+                        variant={headlightColor === (l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff") ? "default" : "outline"}
+                        onClick={() => {
+                          const val = l === "White" ? "#ffffff" : l === "Yellow" ? "#ffff00" : "#0000ff";
+                          if (activeTab === "2d") {
+                            setTwoDHeadlightColor(val);
+                            addLog("color", `Changed 2D headlights to ${l}`);
+                          } else {
+                            setHeadlightColor(val);
+                            addLog("color", `Changed headlights to ${l}`);
+                          }
+                        }}
+                        className="w-full">
+                        {l}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Taillights Panel */}
+              {selectedTool === "taillights" && (
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Taillight Color</Label>
+                  <ColorPicker
+                    label="Taillight Color"
+                    color={taillightColor || "#ff0000"}
+                    onChange={(c) => {
+                      setTaillightColor(c);
+                      addLog("color", `Changed taillights to ${c}`);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Underglow Panel */}
+              {selectedTool === "underglow" && (
+                <div className="space-y-4">
+                  <ColorPicker
+                    label="Underglow Color"
+                    color={(activeTab === "2d" ? twoDUnderglowColor : underglowColor) || "transparent"}
+                    onChange={(c) => {
+                      handleUpdateValue(c);
+                      if (activeTab === "3d" && c) setUnderglowIntensity(1);
+                    }}
+                  />
+                  {activeTab === "3d" && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label className="text-xs">Intensity</Label>
+                        <span className="text-xs font-mono">{Math.round(underglowIntensity * 100)}%</span>
+                      </div>
+                      <input
+                        type="range" min="0" max="2" step="0.1"
+                        value={underglowIntensity}
+                        onChange={(e) => setUnderglowIntensity(parseFloat(e.target.value))}
+                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Spoilers Panel */}
+              {selectedTool === "spoilers" && (
+                <div>
+                  {selectedModel.type === 'suv' ? (
+                    <div className="p-4 bg-muted/30 rounded-lg text-center">
+                      <p className="text-sm text-muted-foreground italic">Spoilers are not recommended for SUVs.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between mb-4">
+                        <Label className="text-sm font-medium">Show Spoiler</Label>
+                        <Button size="sm" variant={showSpoiler ? "default" : "outline"}
+                          onClick={() => {
+                            const newState = !showSpoiler;
+                            setShowSpoiler(newState);
+                            addLog("part", `Spoiler ${newState ? "Enabled" : "Disabled"}`);
+                          }}>
+                          {showSpoiler ? "ON" : "OFF"}
+                        </Button>
+                      </div>
+                      {showSpoiler && (
+                        <div>
+                          <Label className="text-sm font-medium mb-3 block">Spoiler Style</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              { value: 'wing', label: 'Wing', emoji: '🦋', desc: 'GT racing' },
+                              { value: 'ducktail', label: 'Ducktail', emoji: '🦆', desc: 'Low profile' },
+                              { value: 'lip', label: 'Lip', emoji: '👄', desc: 'Subtle edge' },
+                              { value: 'gt', label: 'GT', emoji: '🏁', desc: 'High downforce' }
+                            ].map(s => (
+                              <button
+                                key={s.value}
+                                onClick={() => {
+                                  setSpoilerStyle(s.value);
+                                  addLog("part", `Equipped ${s.label} spoiler`);
+                                }}
+                                className={cn(
+                                  "relative p-2 rounded-lg border-2 transition-all",
+                                  spoilerStyle === s.value
+                                    ? "border-primary bg-primary/10 shadow-lg"
+                                    : "border-border bg-card hover:border-primary/50"
+                                )}
+                              >
+                                <div className="text-2xl mb-0.5">{s.emoji}</div>
+                                <div className="font-semibold text-xs">{s.label}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Decals Panel */}
+              {selectedTool === "decals" && (
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Decal Styles</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { name: 'Flames', emoji: '🔥', desc: 'Racing flames', path: 'flames' },
+                      { name: 'Stripes', emoji: '🏎️', desc: 'Dual stripes', path: 'stripes' },
+                      { name: 'Racing', emoji: '🏁', desc: 'Racing numbers', path: 'racing' },
+                      { name: 'Logo', emoji: '⭐', desc: 'Custom logo', path: 'logo' }
+                    ].map(d => (
+                      <button
+                        key={d.name}
+                        onClick={() => {
+                          const url = `/decals/${d.path}.svg`;
+                          setDecalUrl(url);
+                          addLog("part", `Applied decal: ${d.name}`);
+                        }}
+                        className={cn(
+                          "relative p-2 rounded-lg border-2 transition-all",
+                          decalUrl?.includes(d.path)
+                            ? "border-primary bg-primary/10 shadow-lg"
+                            : "border-border bg-card hover:border-primary/50"
+                        )}
+                      >
+                        <div className="text-2xl mb-0.5">{d.emoji}</div>
+                        <div className="font-semibold text-xs">{d.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <Button size="sm" variant="outline" className="w-full mt-3"
+                    onClick={() => {
+                      setDecalUrl(undefined);
+                      addLog("part", "Removed decal");
+                    }}>
+                    Clear Decal
+                  </Button>
+                </div>
+              )}
+
+              {/* Bumpers Panel */}
+              {selectedTool === "bumpers" && (
+                <div className="bg-secondary/20 rounded-lg p-4 text-center border border-primary/10">
+                  <Shield className="w-8 h-8 mx-auto mb-2 text-primary/50" />
+                  <p className="text-sm font-medium">Bumper Selection</p>
+                  <p className="text-xs text-muted-foreground mt-1">Please select bumper styles from the studio view controls.</p>
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
 
       </div> {/* End flex container */}
     </div>

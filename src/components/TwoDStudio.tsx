@@ -29,6 +29,16 @@ const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool: _selectedTool, to
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
   const maskStorageRef = useRef<HTMLCanvasElement | null>(null); // Offscreen canvas for mask data
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Responsive max canvas size
+  const getMaxCanvasDimensions = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      return { maxWidth: Math.floor(rect.width - 32), maxHeight: Math.floor(rect.height - 32) };
+    }
+    return { maxWidth: 800, maxHeight: 600 };
+  }, []);
   
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [isDrawing, setIsDrawing] = useState(false);
@@ -252,8 +262,7 @@ const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool: _selectedTool, to
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const maxWidth = 800;
-          const maxHeight = 600;
+          const { maxWidth, maxHeight } = getMaxCanvasDimensions();
           let width = img.width;
           let height = img.height;
           
@@ -645,7 +654,7 @@ const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool: _selectedTool, to
 
   return (
     <div className="h-full flex flex-col gap-4">
-      <div className="flex-1 relative bg-secondary/10 border-2 border-dashed border-primary/20 rounded-xl overflow-hidden min-h-[400px]">
+      <div ref={containerRef} className="flex-1 relative bg-secondary/10 border-2 border-dashed border-primary/20 rounded-xl overflow-hidden min-h-[250px] sm:min-h-[350px] md:min-h-[400px]">
         {!image ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center">
             <Upload className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />

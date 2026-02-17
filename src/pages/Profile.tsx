@@ -80,24 +80,29 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        console.log("Token used:", token);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
+      try {
         const res = await api.get(`/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Profile response:", res.data);
         setUser(res.data.user);
-      } catch (err: unknown) {
-        console.error(
-          "Failed to load user:",
-          (err as { response?: { data?: unknown }; message?: string }).response?.data || (err as Error).message
-        );
+      } catch (err: any) {
+        console.error("Failed to load user:", err);
+        if (err.response?.status === 401 || err.response?.status === 403) {
+           localStorage.removeItem("token");
+           navigate("/login");
+        } else {
+           toast.error(err.response?.data?.message || "Failed to load profile");
+        }
       }
     };
     fetchUser();
-  }, []);
+  }, [navigate]);
 
   const fetchUserDesigns = React.useCallback(async () => {
     try {
@@ -242,6 +247,17 @@ const Profile = () => {
     navigate("/login");
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground animate-pulse">Loading Profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen relative overflow-hidden p-4 sm:p-6">
       {/* Background Effects */}
@@ -329,7 +345,7 @@ const Profile = () => {
         </Card>
 
         {/* Saved Designs Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Saved Designs */}
           <div
             className="lg:col-span-3 animate-slideIn"
@@ -562,9 +578,9 @@ const Profile = () => {
         </div>
 
         {/* Floating Elements */}
-        <Zap className="absolute top-32 right-20 w-6 h-6 text-automotive-orange opacity-30 animate-float delay-500" />
-        <Shield className="absolute bottom-40 left-20 w-7 h-7 text-automotive-orange opacity-30 animate-float delay-1000" />
-        <Car className="absolute top-1/2 left-10 w-8 h-8 text-automotive-orange-light opacity-20 animate-float" />
+        <Zap className="absolute top-32 right-20 w-6 h-6 text-automotive-orange opacity-30 animate-float delay-500 hidden sm:block" />
+        <Shield className="absolute bottom-40 left-20 w-7 h-7 text-automotive-orange opacity-30 animate-float delay-1000 hidden sm:block" />
+        <Car className="absolute top-1/2 left-10 w-8 h-8 text-automotive-orange-light opacity-20 animate-float hidden sm:block" />
       </div>
 
       {/* Hidden File Inputs */}

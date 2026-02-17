@@ -196,7 +196,7 @@ const LoginForm = () => {
             <div className="text-center">
               <button 
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => toast.info("Password reset feature coming soon!")}
+                onClick={() => navigate("/forgot-password")}
                 type="button"
               >
                 Forgot your password?

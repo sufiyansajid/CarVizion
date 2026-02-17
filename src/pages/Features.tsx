@@ -165,7 +165,7 @@ const Features = () => {
                     {feature.icon}
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-2xl font-bold mb-2">
+                    <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold mb-2">
                       {feature.title}
                     </CardTitle>
                     <CardDescription className="text-base">
@@ -192,7 +192,7 @@ const Features = () => {
 
         {/* Additional Features Grid */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">
             And So Much More
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -224,10 +224,10 @@ const Features = () => {
         {/* CTA Section */}
         <Card className="backdrop-blur-lg bg-card/50 border-border shadow-2xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold mb-4">
+            <CardTitle className="text-2xl sm:text-3xl font-bold mb-4">
               Ready to Experience These Features?
             </CardTitle>
-            <CardDescription className="text-lg">
+            <CardDescription className="text-base sm:text-lg">
               Start customizing your dream car today with our powerful AR
               visualization tools.
             </CardDescription>

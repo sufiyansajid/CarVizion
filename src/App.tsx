@@ -13,6 +13,8 @@ import Features from "./pages/Features";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import Navbar from "./components/Navbar";
 import KeyboardShortcutsDialog from "./components/KeyboardShortcutsDialog";
@@ -31,6 +33,8 @@ const AppContent = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/ar-studio" element={<ARStudio />} />
           <Route path="/pricing" element={<Pricing />} />
