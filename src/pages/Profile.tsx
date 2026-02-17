@@ -38,15 +38,15 @@ import {
   Zap,
   Shield,
   Eye,
+  Activity,
+  Wrench,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useRef, useEffect } from "react";
 import EditProfileDialog from "@/components/dialogs/EditProfileDialog";
 import ChangePasswordDialog from "@/components/dialogs/ChangePasswordDialog";
-import { EditCarDesignDialog } from "@/components/dialogs/EditCarDesignDialog";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { designApi, type DesignData } from "@/store/designStore";
+import { designApi } from "@/store/designStore";
 import api from "@/store/baseApi";
 import { getAvatarUrl, getImageUrl } from "@/lib/imageUtils";
 import type { User } from "@/types/user";
@@ -63,8 +63,6 @@ const Profile = () => {
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
-  const [editDesignOpen, setEditDesignOpen] = useState(false);
-  const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
   const [savedDesigns, setSavedDesigns] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -135,25 +133,10 @@ const Profile = () => {
   }, [user, fetchUserDesigns]);
 
   const handleEditDesign = (design: Design) => {
-    setSelectedDesign({
-      id: design.id,
-      user_id: design.user_id,
-      name: design.name,
-      description: design.description,
-      thumbnail_url: design.thumbnail_url,
-      model_data: design.model_data,
-      color_data: design.color_data,
-      parts_data: design.parts_data,
-      created_at: design.created_at,
-      updated_at: design.updated_at,
-    });
-    setEditDesignOpen(true);
+    // Navigate to AR Studio with the design ID to load it for editing
+    navigate(`/ar-studio?designId=${design.id}`);
   };
 
-  const handleSaveDesign = (data: DesignData) => {
-    console.log("Design saved:", data);
-    fetchUserDesigns(); // Refresh the list
-  };
 
   const handleDeleteDesign = async (designId: number) => {
     try {
@@ -381,7 +364,7 @@ const Profile = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                       {savedDesigns.map((design) => (
                         <Card
                           key={design.id}
@@ -407,7 +390,7 @@ const Profile = () => {
                             <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                               {design.description}
                             </p>
-                            <p className="text-xs text-muted-foreground mb-3">
+                            <p className="text-xs text-muted-foreground mb-2">
                               Created:{" "}
                               {new Date(design.created_at).toLocaleDateString()}
                             </p>
@@ -415,29 +398,44 @@ const Profile = () => {
                               Updated:{" "}
                               {new Date(design.updated_at).toLocaleDateString()}
                             </p>
-                            <div className="flex gap-2">
+                            {/* Activity Log Summary */}
+                            {design.activity_log && design.activity_log.length > 0 && (
+                              <div className="flex items-center gap-1.5 mb-3 text-xs text-muted-foreground">
+                                <Activity className="h-3 w-3 text-green-400" />
+                                <span>{design.activity_log.length} modification{design.activity_log.length !== 1 ? 's' : ''}</span>
+                                <div className="flex gap-0.5 ml-1">
+                                  {Array.from(new Set(design.activity_log.map(l => l.type))).slice(0, 3).map((type, i) => (
+                                    <span key={i} className="text-[10px]">
+                                      {type === 'color' ? '🎨' : type === 'part' ? '🔧' : type === 'voice' ? '🎤' : '🖥️'}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="flex-1 hover:bg-accent hover:text-accent-foreground"
+                                className="flex-1 min-w-0 hover:bg-accent hover:text-accent-foreground text-xs sm:text-sm"
                                 onClick={() => handleEditDesign(design)}
                               >
-                                Edit
+                                <Wrench className="h-3 w-3 mr-1 flex-shrink-0" />
+                                <span className="truncate">Edit in Studio</span>
                               </Button>
-                              {design.model_data?.model_url && (
+                              {(design.model_data as Record<string, unknown>)?.model_url && (
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="px-2 hover:bg-accent hover:text-accent-foreground"
+                                  className="px-2 hover:bg-accent hover:text-accent-foreground text-xs sm:text-sm"
                                   onClick={() => {
                                     setActiveModelUrl(
-                                      toModelUrl(design.model_data?.model_url)
+                                      toModelUrl((design.model_data as Record<string, unknown>)?.model_url as string)
                                     );
                                     setViewModelOpen(true);
                                   }}
                                 >
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  View 3D
+                                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" />
+                                  <span className="hidden sm:inline">View 3D</span>
                                 </Button>
                               )}
                               <Button
@@ -449,7 +447,7 @@ const Profile = () => {
                                   setDeleteDialogOpen(true);
                                 }}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               </Button>
                             </div>
                           </CardContent>
@@ -609,12 +607,7 @@ const Profile = () => {
         open={changePasswordOpen}
         onOpenChange={setChangePasswordOpen}
       />
-      <EditCarDesignDialog
-        open={editDesignOpen}
-        onOpenChange={setEditDesignOpen}
-        design={selectedDesign ?? undefined}
-        onSave={handleSaveDesign}
-      />
+
       <Dialog open={viewModelOpen} onOpenChange={setViewModelOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>

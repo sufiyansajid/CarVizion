@@ -77,21 +77,22 @@ const Navbar = () => {
         "fixed top-0 left-0 right-0 z-50 w-full shadow-lg transition-all duration-300 bg-black/30 backdrop-blur-md border-b border-white/10"
       )}
     >
-      <div className="max-w-90rem mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between py-2 sm:py-3">
+      <div className="max-w-90rem mx-auto px-3 sm:px-6">
+        <div className="flex items-center justify-between py-2 sm:py-3 gap-2">
           <Link to="/" className="flex items-center">
             <img
               src="/logo-solid-black-removebg-preview.png"
               alt="CarVizion Logo"
-              className="h-16 sm:h-18 w-auto object-contain"
+              className="h-10 sm:h-16 md:h-18 w-auto object-contain"
             />
           </Link>
 
-          {/* Mobile menu button */}
+          {/* Mobile: theme toggle + hamburger, right-aligned */}
           <div className="md:hidden flex items-center gap-2">
             <ThemeToggleButton
               variant="gif"
               url="https://media.giphy.com/media/KBbr4hHl9DSahKvInO/giphy.gif"
+              className="w-8 h-8 shrink-0"
             />
             {isAuthenticated && user ? (
               <DropdownMenu>
@@ -100,14 +101,14 @@ const Navbar = () => {
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "h-auto p-1.5 bg-black/40 text-white hover:bg-black/60"
+                      "h-8 w-8 p-0 bg-black/40 text-white hover:bg-black/60 shrink-0"
                     )}
                   >
-                    <Avatar className="h-7 w-7 border border-white/20">
+                    <Avatar className="h-6 w-6 border border-white/20">
                       <AvatarImage
                         src={getAvatarUrl(user.avatarUrl)}
                       />
-                      <AvatarFallback className="bg-primary/20 text-xs">
+                      <AvatarFallback className="bg-primary/20 text-[10px]">
                         {user.firstName?.[0]?.toUpperCase()}
                         {user.lastName?.[0]?.toUpperCase()}
                       </AvatarFallback>
@@ -156,6 +157,7 @@ const Navbar = () => {
                   { label: "Image Studio", icon: <ImageIcon className="w-5 h-5 text-primary" />, onClick: () => navigate("/image-studio") },
                   { label: "Pricing", icon: <Star className="w-5 h-5 text-primary" />, onClick: () => navigate("/pricing") },
                   { label: "About Us", icon: <Users className="w-5 h-5 text-primary" />, onClick: () => navigate("/about") },
+                  { label: "Profile", icon: <User className="w-5 h-5 text-primary" />, onClick: () => navigate("/profile") },
                   { label: "Sign In", icon: <User className="w-5 h-5 text-primary" />, onClick: () => navigate("/login") },
                   { label: "Get Started", icon: <Sparkles className="w-5 h-5 text-primary" />, onClick: () => navigate("/register") },
                 ]}
@@ -171,8 +173,8 @@ const Navbar = () => {
                 menuAlignment="center"
                 enableBlur={true}
                 customButton={
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    <Menu className="h-6 w-6 text-white" />
+                  <div className="relative w-full h-full flex items-center justify-center mt-[10px]">
+                    <Menu className="h-5 w-5 text-white" />
                   </div>
                 }
               />

@@ -258,6 +258,14 @@ const TwoDStudio: React.FC<TwoDStudioProps> = ({ selectedTool: _selectedTool, to
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validate file size - max 5MB
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`File too large! Maximum size is 5MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+        event.target.value = ''; // Reset the input
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();

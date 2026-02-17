@@ -10,6 +10,7 @@ export interface Design {
   model_data: Record<string, unknown>; // Note: underscore to match database
   color_data?: Record<string, unknown>;
   parts_data?: Record<string, unknown>;
+  activity_log?: Array<{ type: string; message: string; context: string; time: string }>;
   created_at: string; // Auto-managed by database
   updated_at: string; // Auto-managed by database
 }
@@ -22,6 +23,7 @@ export interface DesignData {
   model_data?: Record<string, unknown>; // Use underscore to match database
   color_data?: Record<string, unknown>;
   parts_data?: Record<string, unknown>;
+  activity_log?: Array<{ type: string; message: string; context: string; time: string }>;
   // No date fields - they're auto-managed by database
 }
 

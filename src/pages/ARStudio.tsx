@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -168,6 +169,11 @@ const ARStudio = () => {
   const [designDescription, setDesignDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  // --- LOADED DESIGN STATE (for editing saved designs) ---
+  const [searchParams] = useSearchParams();
+  const [loadedDesignId, setLoadedDesignId] = useState<number | null>(null);
+  const [designLoaded, setDesignLoaded] = useState(false);
+
   // Debounced values for performance - reduces 3D re-renders during color selection
   const debouncedBodyColor = useDebounce(bodyColor, 150);
   const debouncedRimColor = useDebounce(rimColor, 150);
@@ -268,6 +274,111 @@ const ARStudio = () => {
       },
     ]);
   };
+
+  // --- LOAD SAVED DESIGN FROM URL ---
+  useEffect(() => {
+    const designIdParam = searchParams.get('designId');
+    if (!designIdParam || designLoaded) return;
+
+    const loadDesign = async () => {
+      try {
+        const id = parseInt(designIdParam, 10);
+        if (isNaN(id)) return;
+
+        const response = await designApi.getDesignById(id);
+        const design = response.design;
+        if (!design) return;
+
+        // Set design metadata
+        setLoadedDesignId(design.id);
+        setDesignName(design.name || '');
+        setDesignDescription(design.description || '');
+
+        // Extract saved data
+        const colorData = design.color_data as Record<string, unknown> || {};
+        const partsData = design.parts_data as Record<string, unknown> || {};
+        const modelData = design.model_data as Record<string, unknown> || {};
+
+        // Build a DesignProfile from the saved design
+        const loadedProfile: DesignProfile = {
+          bodyColor: (colorData.bodyColor as string) || undefined,
+          rimColor: (colorData.rimColor as string) || undefined,
+          windowTint: (colorData.windowTint as number) ?? 0,
+          metalness: (colorData.metalness as number) ?? 0.3,
+          roughness: (colorData.roughness as number) ?? 0.4,
+          underglowColor: (colorData.underglowColor as string) || undefined,
+          underglowIntensity: (colorData.underglowIntensity as number) ?? 0,
+          headlightColor: (colorData.headlightColor as string) || undefined,
+          taillightColor: (colorData.taillightColor as string) || undefined,
+          showSpoiler: (partsData.showSpoiler as boolean) ?? false,
+          spoilerStyle: (partsData.spoilerStyle as string) || 'wing',
+          rimStyle: (partsData.rimStyle as string) || 'stock',
+          decalUrl: (partsData.decalUrl as string) || undefined,
+          wrapType: (partsData.wrapType as string) || undefined,
+        };
+
+        // Pre-populate designProfiles BEFORE changing the model.
+        // This ensures the model-change effect finds the profile and restores
+        // from it instead of resetting to defaults.
+        const targetModelId = modelData.modelId as string;
+        if (targetModelId) {
+          setDesignProfiles(prev => ({
+            ...prev,
+            [targetModelId]: loadedProfile,
+          }));
+
+          const matchingModel = carModels.find(m => m.id === targetModelId);
+          if (matchingModel) {
+            setSelectedModel(matchingModel);
+          }
+        } else {
+          // No model ID saved — apply state directly to current model
+          setBodyColor(loadedProfile.bodyColor);
+          setRimColor(loadedProfile.rimColor);
+          setWindowTint(loadedProfile.windowTint);
+          setMetalness(loadedProfile.metalness);
+          setRoughness(loadedProfile.roughness);
+          setUnderglowColor(loadedProfile.underglowColor);
+          setUnderglowIntensity(loadedProfile.underglowIntensity);
+          setHeadlightColor(loadedProfile.headlightColor);
+          setTaillightColor(loadedProfile.taillightColor);
+          setShowSpoiler(loadedProfile.showSpoiler);
+          setSpoilerStyle(loadedProfile.spoilerStyle);
+          setRimStyle(loadedProfile.rimStyle);
+          setDecalUrl(loadedProfile.decalUrl);
+          setWrapType(loadedProfile.wrapType);
+        }
+
+        // Restore activity log
+        const activityLog = (design.activity_log || []) as Array<{ type: string; message: string; context: string; time: string }>;
+        const restoredLogs: LogEntry[] = activityLog.map((entry, i) => ({
+          id: `restored-${i}-${Math.random().toString(36).substring(7)}`,
+          time: new Date(entry.time),
+          type: entry.type as LogEntry['type'],
+          message: entry.message,
+          context: entry.context,
+        }));
+        // Add the "loaded" log entry
+        restoredLogs.push({
+          id: Math.random().toString(36).substring(7),
+          time: new Date(),
+          type: 'system',
+          message: `Loaded saved design: ${design.name}`,
+          context: activeTab,
+        });
+        setLogs(restoredLogs);
+
+        setDesignLoaded(true);
+        toast.success(`Loaded design: ${design.name}`);
+      } catch (error) {
+        console.error('Failed to load design:', error);
+        toast.error('Failed to load saved design');
+      }
+    };
+
+    loadDesign();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, carModels, designLoaded]);
 
   // REMOVED "Loaded Model" LOG
   // REMOVED "Switched Tab" LOG
@@ -473,6 +584,14 @@ const ARStudio = () => {
 
     setIsSaving(true);
     try {
+      // Serialize activity logs for persistence
+      const serializedLogs = logs.map(log => ({
+        type: log.type,
+        message: log.message,
+        context: log.context,
+        time: log.time instanceof Date ? log.time.toISOString() : log.time,
+      }));
+
       const designData = {
         name: designName.trim(),
         description: designDescription.trim() || `Custom ${selectedModel.name} design`,
@@ -492,16 +611,24 @@ const ARStudio = () => {
         parts_data: {
           showSpoiler,
           spoilerStyle,
+          rimStyle,
           wrapType,
           decalUrl,
         },
+        activity_log: serializedLogs,
       };
 
-      await designApi.createDesign(designData);
-      toast.success("Design saved successfully!");
+      if (loadedDesignId) {
+        // Update existing design
+        await designApi.updateDesign(loadedDesignId, designData);
+        toast.success("Design updated successfully!");
+      } else {
+        // Create new design
+        const response = await designApi.createDesign(designData);
+        setLoadedDesignId(response.design.id);
+        toast.success("Design saved successfully!");
+      }
       setSaveDialogOpen(false);
-      setDesignName("");
-      setDesignDescription("");
     } catch (error: unknown) {
       console.error("Failed to save design:", error);
       const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to save design. Please try again.";
@@ -538,16 +665,16 @@ const ARStudio = () => {
   const tintOptions = ["Light", "Medium", "Dark", "Limo"];
 
   return (
-    <div className="min-h-screen bg-background p-2 sm:p-4 animate-slideIn">
+    <div className="min-h-screen bg-background p-1.5 sm:p-2 md:p-4 animate-slideIn">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-4 sm:mb-6">
         <Card className="bg-card/80 backdrop-blur-sm border-border">
           <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-              <CardTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+              <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                 Studio
               </CardTitle>
-                  <div className="flex flex-wrap gap-2 overflow-x-auto max-w-full">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 overflow-x-auto max-w-full">
                     {/* Voice Control Button - FREE FEATURE! */}
                     {isSupported && (
                       <Button
@@ -555,10 +682,10 @@ const ARStudio = () => {
                         size="sm"
                         onClick={toggleListening}
                         title="Voice control: Say commands like 'change color to red'"
-                        className={isListening ? "animate-pulse" : ""}
+                        className={cn("text-xs sm:text-sm", isListening ? "animate-pulse" : "")}
                       >
-                        {isListening ? <Mic className="w-4 h-4 mr-2" /> : <MicOff className="w-4 h-4 mr-2" />}
-                        {isListening ? "Listening..." : "Voice Control"}
+                        {isListening ? <Mic className="w-4 h-4 sm:mr-1" /> : <MicOff className="w-4 h-4 sm:mr-1" />}
+                        <span className="hidden sm:inline">{isListening ? "Listening..." : "Voice"}</span>
                       </Button>
                     )}
 
@@ -572,19 +699,20 @@ const ARStudio = () => {
                           size="sm"
                           onClick={() => setDebugMode(!debugMode)}
                           title="Debug mode: Color-code parts"
+                          className="text-xs sm:text-sm"
                         >
-                          <SlidersHorizontal className="w-4 h-4 mr-2" />
-                          {debugMode ? "Debug ON" : "Debug OFF"}
+                          <SlidersHorizontal className="w-4 h-4 sm:mr-1" />
+                          <span className="hidden sm:inline">{debugMode ? "Debug ON" : "Debug OFF"}</span>
                         </Button>
 
                         {/* Car Selection */}
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Car className="w-4 h-4 mr-2" /> Garage
+                            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                              <Car className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Garage</span>
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-3xl">
+                          <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle className="flex items-center gap-2">
                                 <Car className="w-5 h-5 text-primary" />
@@ -653,9 +781,9 @@ const ARStudio = () => {
                         {/* Save Design Dialog */}
                         <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
                           <DialogTrigger asChild>
-                            <Button variant="default" title="Save Design (Ctrl+S)">
-                              <Save className="w-4 h-4 mr-2" /> Save Design
-                              <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-primary-foreground/20 rounded hidden sm:inline">⌘S</kbd>
+                            <Button variant="default" title="Save Design (Ctrl+S)" size="sm" className="text-xs sm:text-sm">
+                              <Save className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Save Design</span>
+                              <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-primary-foreground/20 rounded hidden md:inline">⌘S</kbd>
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-md">
@@ -727,10 +855,10 @@ const ARStudio = () => {
         <div className="flex-1 min-w-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             <div className="mb-4 flex items-center justify-center bg-card/80 p-2 rounded-lg border w-fit mx-auto">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="3d" className="text-xs sm:text-sm"><Box className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /><span className="hidden xs:inline">3D</span><span className="xs:hidden">3D</span><span className="hidden sm:inline"> Studio</span></TabsTrigger>
-                <TabsTrigger value="2d" className="text-xs sm:text-sm"><Camera className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /><span className="hidden xs:inline">2D</span><span className="xs:hidden">2D</span><span className="hidden sm:inline"> AI</span></TabsTrigger>
-                <TabsTrigger value="video" className="text-xs sm:text-sm"><Video className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /><span className="hidden xs:inline">AR</span><span className="xs:hidden">AR</span><span className="hidden sm:inline"> Video</span></TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 gap-0.5">
+                <TabsTrigger value="3d" className="text-xs sm:text-sm px-2 sm:px-3"><Box className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />3D<span className="hidden sm:inline"> Studio</span></TabsTrigger>
+                <TabsTrigger value="2d" className="text-xs sm:text-sm px-2 sm:px-3"><Camera className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />2D<span className="hidden sm:inline"> AI</span></TabsTrigger>
+                <TabsTrigger value="video" className="text-xs sm:text-sm px-2 sm:px-3"><Video className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />AR<span className="hidden sm:inline"> Video</span></TabsTrigger>
               </TabsList>
             </div>
 
